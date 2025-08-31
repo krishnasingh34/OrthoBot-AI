@@ -1,0 +1,114 @@
+/* Global App Styles with New Color Palette */
+:root {
+  /* Color Palette */
+  --primary-blue: #2D9CDB;
+  --soft-sky-blue: #E6F4FB;
+  --accent-purple: #9B51E0;
+  --gradient: linear-gradient(135deg, #2D9CDB, #56CCF2);
+  --neutral-gray: #F2F2F2;
+  --dark-navy: #1B2735;
+  --white: #FFFFFF;
+  --accent-red: #EB5757;
+  --hover-blue: #1C7FB6;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;  
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: var(--dark-navy);
+  line-height: 1.6;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 20px; /* Account for fixed navbar */
+}
+
+/* Global hover effects */
+.hover-scale {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions for all interactive elements */
+button, a, .card, .interactive {
+  transition: all 0.3s ease;
+}
+
+/* Section backgrounds - alternating */
+section:nth-child(odd) {
+  background: var(--white);
+}
+
+section:nth-child(even) {
+  background: var(--soft-sky-blue);
+}
+
+/* Scroll to top button (if needed) */
+.scroll-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.scroll-to-top:hover {
+  background: var(--hover-blue);
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+  }
+  
+  .scroll-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
