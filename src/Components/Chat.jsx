@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Navbar from './Navbar';
 import '../CSS/Chat.css';
+import profileLogo from '../assets/favicon.png';
 
 const Chat = () => {
   const [inputValue, setInputValue] = useState('');
@@ -818,7 +819,7 @@ const Chat = () => {
               transition={{ duration: 0.6 }}
             >
               <div className="welcome-avatar">
-                <img src="./src/assets/favicon.png" alt="OrthoBot AI" className="avatar-img" />
+                <img src={profileLogo} alt="OrthoBot AI" className="avatar-img" />
               </div>
               <h1 className="welcome-title">Welcome to OrthoBot AI</h1>
               <p className="welcome-subtitle">
@@ -842,7 +843,7 @@ const Chat = () => {
                     {message.type === 'user' ? (
                       <User size={20} />
                     ) : (
-                      <img src="./src/assets/favicon.png" alt="Bot" className="bot-avatar" />
+                      <img src={profileLogo} alt="Bot" className="bot-avatar" />
                     )}
                   </div>
                   <div className="message-content">
