@@ -31,7 +31,9 @@ const ChatDemoContent = () => {
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
-      // Redirect to chat page
+      // Store question in sessionStorage for immediate access
+      sessionStorage.setItem('pendingQuestion', inputValue.trim());
+      // Navigate to chat page
       window.location.href = '/chat';
       setInputValue('');
     }
@@ -44,7 +46,9 @@ const ChatDemoContent = () => {
   };
 
   const handleQuestionClick = (question) => {
-    // Redirect to chat page with pre-filled question
+    // Store question in sessionStorage for immediate access
+    sessionStorage.setItem('pendingQuestion', question);
+    // Navigate to chat page
     window.location.href = '/chat';
   };
 

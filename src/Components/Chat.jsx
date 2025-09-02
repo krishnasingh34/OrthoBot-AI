@@ -32,6 +32,18 @@ const Chat = () => {
   const [editTitle, setEditTitle] = useState('');
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchModalQuery, setSearchModalQuery] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+
+  // Placeholder text for different languages
+  const placeholders = {
+    en: "Ask me about your recovery, exercise or any orthopedic questions...",
+    hi: "अपनी रिकवरी, व्यायाम या किसी भी हड्डी रोग संबंधी प्रश्न के बारे में पूछें..."
+  };
+
+  // Handle language change
+  const handleLanguageChange = (e) => {
+    setSelectedLanguage(e.target.value);
+  };
 
   // Load chat sessions from localStorage on component mount
   useEffect(() => {
@@ -41,12 +53,82 @@ const Chat = () => {
     }
   }, []);
 
+  // Handle pending question after component is fully loaded
+  useEffect(() => {
+    const pendingQuestion = sessionStorage.getItem('pendingQuestion');
+    if (pendingQuestion) {
+      // Set the input value and auto-send
+      setInputValue(pendingQuestion);
+      setTimeout(() => {
+        processIncomingQuestion(pendingQuestion);
+      }, 500);
+      // Clear pending question
+      sessionStorage.removeItem('pendingQuestion');
+    }
+  }, [chatSessions]);
+
   // Save chat sessions to localStorage whenever sessions change
   useEffect(() => {
     if (chatSessions.length > 0) {
       localStorage.setItem('orthobotChatSessions', JSON.stringify(chatSessions));
     }
   }, [chatSessions]);
+
+  // Extract intent from user query
+  const extractIntent = (text) => {
+    const cleanText = text.toLowerCase().trim();
+    const words = cleanText.split(' ').filter(word => word.length > 2);
+    
+    // Medical keywords with their categories
+    const medicalKeywords = {
+      bodyParts: ['knee', 'back', 'shoulder', 'hip', 'ankle', 'wrist', 'elbow', 'spine', 'neck', 'foot', 'hand'],
+      conditions: ['pain', 'injury', 'fracture', 'sprain', 'arthritis', 'torn', 'broken'],
+      treatments: ['surgery', 'therapy', 'exercise', 'recovery', 'rehabilitation', 'treatment', 'medication'],
+      symptoms: ['swelling', 'stiffness', 'numbness', 'weakness', 'aching']
+    };
+    
+    // Find relevant keywords
+    const foundBodyParts = words.filter(word => medicalKeywords.bodyParts.includes(word));
+    const foundConditions = words.filter(word => medicalKeywords.conditions.includes(word));
+    const foundTreatments = words.filter(word => medicalKeywords.treatments.includes(word));
+    const foundSymptoms = words.filter(word => medicalKeywords.symptoms.includes(word));
+    
+    // Generate concise intent
+    let intent = '';
+    
+    if (foundBodyParts.length > 0) {
+      intent += foundBodyParts[0];
+    }
+    
+    if (foundConditions.length > 0) {
+      intent += (intent ? ' ' : '') + foundConditions[0];
+    } else if (foundSymptoms.length > 0) {
+      intent += (intent ? ' ' : '') + foundSymptoms[0];
+    }
+    
+    if (foundTreatments.length > 0 && intent.length < 15) {
+      intent += (intent ? ' ' : '') + foundTreatments[0];
+    }
+    
+    // If no medical keywords found, create general intent
+    if (!intent) {
+      if (words.some(word => ['how', 'what', 'when', 'why', 'where'].includes(word))) {
+        intent = 'General question';
+      } else if (words.some(word => ['help', 'advice', 'recommend'].includes(word))) {
+        intent = 'Seeking advice';
+      } else {
+        // Take first 2-3 meaningful words
+        const meaningfulWords = words.filter(word => 
+          !['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word)
+        );
+        intent = meaningfulWords.slice(0, 3).join(' ');
+      }
+    }
+    
+    // Capitalize first letter and limit length
+    intent = intent.charAt(0).toUpperCase() + intent.slice(1);
+    return intent.length > 25 ? intent.substring(0, 25).trim() : intent;
+  };
 
   // Filter chat sessions based on search query
   const filteredChatSessions = chatSessions.filter(session =>
@@ -57,13 +139,14 @@ const Chat = () => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
+  const handleSendMessage = (questionText = null) => {
+    const messageText = questionText || inputValue.trim();
+    if (messageText) {
       setIsWelcomeScreen(false);
       const newMessage = {
         id: Date.now(),
         type: 'user',
-        text: inputValue,
+        text: messageText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
@@ -75,7 +158,7 @@ const Chat = () => {
         const newSessionId = Date.now().toString();
         const newSession = {
           id: newSessionId,
-          title: inputValue.length > 30 ? inputValue.substring(0, 30) + '...' : inputValue,
+          title: extractIntent(inputValue),
           messages: updatedMessages,
           lastUpdated: new Date().toISOString(),
           createdAt: new Date().toISOString()
@@ -93,24 +176,154 @@ const Chat = () => {
       
       setInputValue('');
       
-      // Simulate bot response
-      setTimeout(() => {
-        const botResponse = {
-          id: Date.now() + 1,
-          type: 'bot',
-          text: "I'm here to help with your orthopedic concerns, though I'm experiencing some technical difficulties right now. General recovery principles: Follow your healthcare provider's specific instructions, take prescribed medications as directed, attend all scheduled appointments and therapy sessions, gradually increase activity levels as recommended, listen to your body and don't push through severe pain.",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        const finalMessages = [...updatedMessages, botResponse];
-        setMessages(finalMessages);
-        
-        // Update session with bot response
-        setChatSessions(prev => prev.map(session => 
-          session.id === currentSessionId 
-            ? { ...session, messages: finalMessages, lastUpdated: new Date().toISOString() }
-            : session
-        ));
-      }, 1000);
+      // Get AI response using Backend API
+      getBackendResponse(messageText, updatedMessages);
+    }
+  };
+
+  // Process incoming question from ChatDemo
+  const processIncomingQuestion = (questionText) => {
+    setIsWelcomeScreen(false);
+    const newMessage = {
+      id: Date.now(),
+      type: 'user',
+      text: questionText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    const updatedMessages = [newMessage];
+    setMessages(updatedMessages);
+    
+    // Create new chat session
+    const newSessionId = Date.now().toString();
+    const newSession = {
+      id: newSessionId,
+      title: extractIntent(questionText),
+      messages: updatedMessages,
+      lastUpdated: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+    setChatSessions(prev => [newSession, ...prev]);
+    setCurrentSessionId(newSessionId);
+    
+    setInputValue('');
+    
+    // Get AI response using Backend API
+    getBackendResponse(questionText, updatedMessages);
+  };
+
+  // Backend API integration for real-time responses
+  const getBackendResponse = async (userMessage, currentMessages) => {
+    // Add loading message
+    const loadingMessage = {
+      id: Date.now() + 1,
+      type: 'bot',
+      text: 'Thinking...',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isLoading: true
+    };
+    
+    const messagesWithLoading = [...currentMessages, loadingMessage];
+    setMessages(messagesWithLoading);
+
+    try {
+      // Try multiple backend URL formats
+      const backendUrls = [
+        `${import.meta.env.VITE_BACKEND_URL}/askAI`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/askAI`,
+        `${import.meta.env.VITE_BACKEND_URL}/chat`
+      ];
+
+      let response = null;
+      let lastError = null;
+
+      for (const url of backendUrls) {
+        try {
+          console.log('Trying backend URL:', url);
+          
+          response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // 'Accept': 'application/json',
+              // 'Access-Control-Allow-Origin': '*'
+            },
+            mode: 'cors',
+            body: JSON.stringify({
+              question: userMessage,
+              message: userMessage,
+              prompt: userMessage,
+              query: userMessage
+            })
+          });
+
+          if (response.ok) {
+            console.log('Successfully connected to:', url);
+            break;
+          } else {
+            console.log(`URL ${url} failed with status:`, response.status);
+            lastError = `Status ${response.status}`;
+          }
+        } catch (fetchError) {
+          console.log(`URL ${url} failed with error:`, fetchError.message);
+          lastError = fetchError.message;
+          continue;
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(`All backend URLs failed. Last error: ${lastError}`);
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const errorText = await response.text();
+        console.error('Backend returned non-JSON response:', errorText);
+        throw new Error('Backend returned HTML instead of JSON - server may be down or misconfigured');
+      }
+
+      const data = await response.json();
+      console.log('Backend API Response:', data);
+      
+      // Remove loading message and add actual response
+      const botResponse = {
+        id: Date.now() + 2,
+        type: 'bot',
+        text: data.response || data.answer || data.message || data.reply || 'Sorry, I could not process your request.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      const finalMessages = [...currentMessages, botResponse];
+      setMessages(finalMessages);
+      
+      // Update session with bot response
+      setChatSessions(prev => prev.map(session => 
+        session.id === currentSessionId 
+          ? { ...session, messages: finalMessages, lastUpdated: new Date().toISOString() }
+          : session
+      ));
+
+    } catch (error) {
+      console.error('Error getting backend response:', error);
+      
+      // Remove loading message and add error response
+      const botResponse = {
+        id: Date.now() + 2,
+        type: 'bot',
+        text: `Connection failed: ${error.message}. Please check if your backend server is running and accessible. You can try refreshing the page or contact support.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      const finalMessages = [...currentMessages, botResponse];
+      setMessages(finalMessages);
+      
+      // Update session with error response
+      setChatSessions(prev => prev.map(session => 
+        session.id === currentSessionId 
+          ? { ...session, messages: finalMessages, lastUpdated: new Date().toISOString() }
+          : session
+      ));
     }
   };
 
@@ -190,23 +403,103 @@ const Chat = () => {
     closeContextMenu();
   };
 
-  const handleDownload = (sessionId) => {
+  const handleDownload = async (sessionId) => {
     const session = chatSessions.find(s => s.id === sessionId);
     if (session) {
-      const chatData = {
-        title: session.title,
-        messages: session.messages,
-        createdAt: session.createdAt,
-        lastUpdated: session.lastUpdated
+      // Simple and reliable PDF generation
+      const generatePDF = () => {
+        // Load jsPDF from CDN
+        if (!document.getElementById('jspdf-script')) {
+          const script = document.createElement('script');
+          script.id = 'jspdf-script';
+          script.src = 'https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js';
+          script.onload = () => createPDFDocument();
+          script.onerror = () => {
+            console.error('Failed to load jsPDF');
+            alert('Failed to generate PDF. Please try again.');
+          };
+          document.head.appendChild(script);
+        } else {
+          createPDFDocument();
+        }
       };
-      const dataStr = JSON.stringify(chatData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${session.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+
+      const createPDFDocument = () => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          
+          // Set up document
+          let yPos = 20;
+          const pageHeight = 280;
+          const margin = 20;
+          
+          // Title
+          doc.setFontSize(18);
+          doc.setFont(undefined, 'bold');
+          doc.text(session.title, margin, yPos);
+          yPos += 15;
+          
+          // Metadata
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          doc.text(`Created: ${new Date(session.createdAt).toLocaleDateString()}`, margin, yPos);
+          yPos += 8;
+          doc.text(`Last Updated: ${new Date(session.lastUpdated).toLocaleDateString()}`, margin, yPos);
+          yPos += 15;
+          
+          // Separator line
+          doc.line(margin, yPos, 190, yPos);
+          yPos += 10;
+          
+          // Chat History header
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text('Chat History', margin, yPos);
+          yPos += 15;
+          
+          // Messages
+          session.messages.forEach((message, index) => {
+            // Check if we need a new page
+            if (yPos > pageHeight) {
+              doc.addPage();
+              yPos = 20;
+            }
+            
+            // Message header
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            const sender = message.type === 'user' ? 'User' : 'OrthoBot';
+            doc.text(`${sender} (${message.timestamp}):`, margin, yPos);
+            yPos += 8;
+            
+            // Message content
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            const splitText = doc.splitTextToSize(message.text, 170);
+            
+            // Check if message content fits on current page
+            const textHeight = splitText.length * 5;
+            if (yPos + textHeight > pageHeight) {
+              doc.addPage();
+              yPos = 20;
+            }
+            
+            doc.text(splitText, margin, yPos);
+            yPos += textHeight + 10;
+          });
+          
+          // Save PDF with exact session title
+          const fileName = session.title.replace(/[<>:"/\\|?*]/g, '').trim();
+          doc.save(`${fileName}.pdf`);
+          
+        } catch (error) {
+          console.error('PDF generation error:', error);
+          alert('Failed to generate PDF. Please try again.');
+        }
+      };
+      
+      generatePDF();
     }
     closeContextMenu();
   };
@@ -284,7 +577,10 @@ const Chat = () => {
       {/* Sidebar */}
       <div className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <button className="close-btn">
+          <button className="hamburger-btn-sidebar" onClick={toggleSidebar}>
+            <Menu size={20} />
+          </button>
+          <button className="close-btn" onClick={() => setSidebarOpen(false)}>
             ×
           </button>
         </div>
@@ -301,52 +597,54 @@ const Chat = () => {
             </button>
           </div>
 
+          <div className="section-divider"></div>
           <div className="chat-history-section">
             <h3 className="section-title">Chat History</h3>
-            <div className="chat-history-list">
-              {filteredChatSessions.length > 0 ? (
-                filteredChatSessions.map((session) => (
-                  <div 
-                    key={session.id} 
-                    className={`chat-history-item ${currentSessionId === session.id ? 'active' : ''} ${session.pinned ? 'pinned' : ''}`}
-                    onClick={() => loadChatSession(session.id)}
-                    onContextMenu={(e) => handleContextMenu(e, session.id)}
-                  >
-                    <MessageSquare size={16} />
-                    {editingSession === session.id ? (
-                      <input
-                        type="text"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        onBlur={saveRename}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveRename();
-                          if (e.key === 'Escape') cancelRename();
-                        }}
-                        className="edit-title-input"
-                        autoFocus
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span className="session-title">{session.title}</span>
-                    )}
-                    {session.pinned && <Pin size={12} className="pin-icon" />}
-                    <button
-                      className="context-menu-trigger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleContextMenu(e, session.id);
-                      }}
+            <div className="chat-history-scrollable">
+              <div className="chat-history-list">
+                {filteredChatSessions.length > 0 ? (
+                  filteredChatSessions.map((session) => (
+                    <div 
+                      key={session.id} 
+                      className={`chat-history-item ${currentSessionId === session.id ? 'active' : ''} ${session.pinned ? 'pinned' : ''}`}
+                      onClick={() => loadChatSession(session.id)}
+                      onContextMenu={(e) => handleContextMenu(e, session.id)}
                     >
-                      <MoreVertical size={16} />
-                    </button>
+                      {editingSession === session.id ? (
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onBlur={saveRename}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveRename();
+                            if (e.key === 'Escape') cancelRename();
+                          }}
+                          className="edit-title-input"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span className="session-title">{session.title}</span>
+                      )}
+                      {session.pinned && <Pin size={12} className="pin-icon" />}
+                      <button
+                        className="context-menu-trigger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleContextMenu(e, session.id);
+                        }}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-chats-message">
+                    {searchQuery ? 'No chats found' : 'No chat history yet'}
                   </div>
-                ))
-              ) : (
-                <div className="no-chats-message">
-                  {searchQuery ? 'No chats found' : 'No chat history yet'}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -433,12 +731,11 @@ const Chat = () => {
                         closeSearchModal();
                       }}
                     >
-                      <MessageSquare size={16} />
                       <div className="search-result-content">
                         <div className="search-result-title">{session.title}</div>
                         <div className="search-result-preview">
                           {session.messages.length > 0 
-                            ? session.messages[session.messages.length - 1].text.substring(0, 100) + '...'
+                            ? session.messages[session.messages.length - 1].text.substring(0, 60)
                             : 'No messages yet'
                           }
                         </div>
@@ -471,21 +768,15 @@ const Chat = () => {
         </div>
       )}
 
+      {/* Hamburger button when sidebar is closed */}
+      {!sidebarOpen && (
+        <button className="hamburger-btn-fixed" onClick={toggleSidebar}>
+          <Menu size={20} />
+        </button>
+      )}
+
       {/* Main Chat Area */}
       <div className="chat-main">
-        <div className="chat-header">
-          <button className="menu-btn" onClick={toggleSidebar}>
-            <Menu size={20} />
-          </button>
-          <div className="chat-title">
-            <span>New Chat</span>
-          </div>
-          <div className="chat-actions">
-            <button className="action-btn">
-              <Settings size={16} />
-            </button>
-          </div>
-        </div>
 
         <div className="chat-content">
           {isWelcomeScreen ? (
@@ -525,7 +816,11 @@ const Chat = () => {
                   </div>
                   <div className="message-content">
                     <div className="message-bubble">
-                      <p>{message.text}</p>
+                      {message.isLoading ? (
+                        <p><span className="loading-dots"></span></p>
+                      ) : (
+                        <p>{message.text}</p>
+                      )}
                     </div>
                     <span className="message-time">{message.timestamp}</span>
                   </div>
@@ -539,16 +834,20 @@ const Chat = () => {
           <div className="input-container">
             <input
               type="text"
-              placeholder="अपनी हिंदी, गुजराती या कोई भी सवाल यहाँ लिखें या बोलें..."
+              placeholder={placeholders[selectedLanguage]}
               value={inputValue}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               className="chat-input"
             />
             <div className="input-actions">
-              <select className="language-selector">
-                <option value="hi">हिं</option>
-                <option value="en">En</option>
+              <select 
+                className="language-selector"
+                value={selectedLanguage}
+                onChange={handleLanguageChange}
+              >
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
               </select>
               <button className="voice-btn">
                 <Mic size={20} />
