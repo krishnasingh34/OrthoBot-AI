@@ -1,0 +1,76 @@
+/* Global Text Selection Rules - Make Everything Selectable */
+* {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Disable selection only for interactive elements */
+button, 
+.btn, 
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+.navbar-brand,
+.nav-link,
+.dropdown-toggle,
+.close,
+.modal-header .close,
+.carousel-control-prev,
+.carousel-control-next,
+.pagination .page-link,
+.breadcrumb-item a,
+.tab-pane .nav-link,
+.accordion-button,
+.offcanvas-header .btn-close {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Force text selection for input fields and text areas */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="tel"],
+textarea,
+.form-control,
+.chat-input,
+[contenteditable="true"] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Ensure all text content is selectable */
+p, h1, h2, h3, h4, h5, h6, 
+span, div, article, section,
+.text, .content, .description,
+.message-bubble, .message-content,
+.card-body, .card-text,
+.list-item, .nav-item,
+.dropdown-item,
+.alert, .badge,
+.tooltip, .popover,
+.modal-body, .modal-title,
+.offcanvas-body, .offcanvas-title {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Make sure code blocks and pre elements are selectable */
+code, pre, .code, .highlight {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}

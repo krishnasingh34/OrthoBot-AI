@@ -33,6 +33,7 @@ const Chat = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchModalQuery, setSearchModalQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const messagesEndRef = useRef(null);
 
   // Placeholder text for different languages
   const placeholders = {
@@ -51,6 +52,14 @@ const Chat = () => {
     if (savedSessions) {
       setChatSessions(JSON.parse(savedSessions));
     }
+    
+    // Add chat-page class to body to disable scrolling
+    document.body.classList.add('chat-page');
+    
+    // Cleanup: remove class when component unmounts
+    return () => {
+      document.body.classList.remove('chat-page');
+    };
   }, []);
 
   // Handle pending question after component is fully loaded
@@ -69,65 +78,65 @@ const Chat = () => {
 
   // Save chat sessions to localStorage whenever sessions change
   useEffect(() => {
-    if (chatSessions.length > 0) {
-      localStorage.setItem('orthobotChatSessions', JSON.stringify(chatSessions));
-    }
+    localStorage.setItem('orthobotChatSessions', JSON.stringify(chatSessions));
   }, [chatSessions]);
 
-  // Extract intent from user query
+  // Auto-save current chat messages when they change
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0) {
+      const updatedSessions = chatSessions.map(session => 
+        session.id === currentSessionId 
+          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
+          : session
+      );
+      setChatSessions(updatedSessions);
+    }
+  }, [messages, currentSessionId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  // Extract intent from user query (ChatGPT style)
   const extractIntent = (text) => {
     const cleanText = text.toLowerCase().trim();
-    const words = cleanText.split(' ').filter(word => word.length > 2);
     
-    // Medical keywords with their categories
-    const medicalKeywords = {
-      bodyParts: ['knee', 'back', 'shoulder', 'hip', 'ankle', 'wrist', 'elbow', 'spine', 'neck', 'foot', 'hand'],
-      conditions: ['pain', 'injury', 'fracture', 'sprain', 'arthritis', 'torn', 'broken'],
-      treatments: ['surgery', 'therapy', 'exercise', 'recovery', 'rehabilitation', 'treatment', 'medication'],
-      symptoms: ['swelling', 'stiffness', 'numbness', 'weakness', 'aching']
+    // Define intent patterns like ChatGPT
+    const intentPatterns = {
+      'Post-operative care': ['post-operative', 'post operative', 'after surgery', 'post surgery'],
+      'Knee recovery': ['knee', 'knee pain', 'knee surgery', 'knee injury'],
+      'Back pain relief': ['back pain', 'back injury', 'back surgery', 'spine'],
+      'Shoulder rehabilitation': ['shoulder', 'shoulder pain', 'shoulder surgery', 'shoulder injury'],
+      'Hip replacement care': ['hip', 'hip replacement', 'hip surgery', 'hip pain'],
+      'Exercise guidance': ['exercise', 'workout', 'physical therapy', 'stretching'],
+      'Recovery timeline': ['recovery time', 'how long', 'timeline', 'healing time'],
+      'Pain management': ['pain relief', 'manage pain', 'reduce pain', 'pain medication'],
+      'Mobility improvement': ['mobility', 'movement', 'range of motion', 'flexibility'],
+      'Wound care': ['wound', 'incision', 'stitches', 'healing'],
+      'Return to activities': ['return to work', 'return to sport', 'normal activities'],
+      'Rehabilitation plan': ['rehabilitation', 'rehab', 'therapy plan'],
+      'General orthopedic': ['orthopedic', 'bone', 'joint', 'muscle']
     };
     
-    // Find relevant keywords
-    const foundBodyParts = words.filter(word => medicalKeywords.bodyParts.includes(word));
-    const foundConditions = words.filter(word => medicalKeywords.conditions.includes(word));
-    const foundTreatments = words.filter(word => medicalKeywords.treatments.includes(word));
-    const foundSymptoms = words.filter(word => medicalKeywords.symptoms.includes(word));
-    
-    // Generate concise intent
-    let intent = '';
-    
-    if (foundBodyParts.length > 0) {
-      intent += foundBodyParts[0];
-    }
-    
-    if (foundConditions.length > 0) {
-      intent += (intent ? ' ' : '') + foundConditions[0];
-    } else if (foundSymptoms.length > 0) {
-      intent += (intent ? ' ' : '') + foundSymptoms[0];
-    }
-    
-    if (foundTreatments.length > 0 && intent.length < 15) {
-      intent += (intent ? ' ' : '') + foundTreatments[0];
-    }
-    
-    // If no medical keywords found, create general intent
-    if (!intent) {
-      if (words.some(word => ['how', 'what', 'when', 'why', 'where'].includes(word))) {
-        intent = 'General question';
-      } else if (words.some(word => ['help', 'advice', 'recommend'].includes(word))) {
-        intent = 'Seeking advice';
-      } else {
-        // Take first 2-3 meaningful words
-        const meaningfulWords = words.filter(word => 
-          !['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word)
-        );
-        intent = meaningfulWords.slice(0, 3).join(' ');
+    // Find matching intent
+    for (const [intent, keywords] of Object.entries(intentPatterns)) {
+      if (keywords.some(keyword => cleanText.includes(keyword))) {
+        return intent;
       }
     }
     
-    // Capitalize first letter and limit length
-    intent = intent.charAt(0).toUpperCase() + intent.slice(1);
-    return intent.length > 25 ? intent.substring(0, 25).trim() : intent;
+    // Fallback: extract key medical terms
+    const medicalTerms = ['surgery', 'recovery', 'pain', 'therapy', 'exercise', 'treatment', 'injury', 'healing'];
+    const foundTerm = medicalTerms.find(term => cleanText.includes(term));
+    
+    if (foundTerm) {
+      return foundTerm.charAt(0).toUpperCase() + foundTerm.slice(1) + ' question';
+    }
+    
+    return 'General consultation';
   };
 
   // Filter chat sessions based on search query
@@ -338,6 +347,17 @@ const Chat = () => {
   };
 
   const startNewChat = () => {
+    // Save current chat before starting new one
+    if (currentSessionId && messages.length > 0) {
+      const updatedSessions = chatSessions.map(session => 
+        session.id === currentSessionId 
+          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
+          : session
+      );
+      setChatSessions(updatedSessions);
+      localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
+    }
+    
     setMessages([]);
     setIsWelcomeScreen(true);
     setInputValue('');
@@ -345,6 +365,17 @@ const Chat = () => {
   };
 
   const loadChatSession = (sessionId) => {
+    // Save current chat before switching
+    if (currentSessionId && messages.length > 0) {
+      const updatedSessions = chatSessions.map(session => 
+        session.id === currentSessionId 
+          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
+          : session
+      );
+      setChatSessions(updatedSessions);
+      localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
+    }
+    
     const session = chatSessions.find(s => s.id === sessionId);
     if (session) {
       setMessages(session.messages);
@@ -818,6 +849,8 @@ const Chat = () => {
                     <div className="message-bubble">
                       {message.isLoading ? (
                         <p><span className="loading-dots"></span></p>
+                      ) : message.type === 'bot' ? (
+                        <div dangerouslySetInnerHTML={{ __html: message.text }} />
                       ) : (
                         <p>{message.text}</p>
                       )}
@@ -826,6 +859,7 @@ const Chat = () => {
                   </div>
                 </motion.div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
