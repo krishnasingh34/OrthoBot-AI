@@ -112,8 +112,8 @@ a:active, button:active, [role="button"]:active, .nav-link:active {
 }
 
 .bot {
-  color: #56CCF2;
-  text-shadow: 0 2px 4px rgba(86, 204, 242, 0.5);
+  color: #FFFFFF;
+  /* text-shadow: 0 2px 4px rgba(86, 204, 242, 0.5); */
 }
 
 .ai {

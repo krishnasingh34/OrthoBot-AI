@@ -16,6 +16,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 
 html {
@@ -32,6 +36,11 @@ body {
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+/* Disable scrolling only on chat page */
+body.chat-page {
+  overflow: hidden;
 }
 
 .App {
@@ -57,6 +66,18 @@ body {
 /* Smooth transitions for all interactive elements */
 button, a, .card, .interactive {
   transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Make input fields selectable */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
 }
 
 /* Section backgrounds - alternating */
