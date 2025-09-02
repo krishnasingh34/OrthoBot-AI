@@ -818,7 +818,7 @@ const Chat = () => {
               transition={{ duration: 0.6 }}
             >
               <div className="welcome-avatar">
-                <img src="/src/assets/favicon.png" alt="OrthoBot AI" className="avatar-img" />
+                <img src="./src/assets/favicon.png" alt="OrthoBot AI" className="avatar-img" />
               </div>
               <h1 className="welcome-title">Welcome to OrthoBot AI</h1>
               <p className="welcome-subtitle">
@@ -842,7 +842,7 @@ const Chat = () => {
                     {message.type === 'user' ? (
                       <User size={20} />
                     ) : (
-                      <img src="/src/assets/favicon.png" alt="Bot" className="bot-avatar" />
+                      <img src="./src/assets/favicon.png" alt="Bot" className="bot-avatar" />
                     )}
                   </div>
                   <div className="message-content">
