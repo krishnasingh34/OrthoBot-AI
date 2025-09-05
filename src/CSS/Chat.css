@@ -710,6 +710,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative;
 }
 
 .message.user .message-content {
@@ -718,9 +719,9 @@
 
 .message-bubble {
   background: #2d2d2d;
-  padding: 12px 16px;
-  border-radius: 16px;
-  max-width: 85%;
+  padding: 10px 11px;
+  border-radius: 12px;
+  max-width: 105%;
   word-wrap: break-word;
   user-select: text;
   -webkit-user-select: text;
@@ -748,7 +749,7 @@
 
 .message.bot .message-bubble strong {
   font-weight: 600;
-  color: #3b82f6;
+  color: aliceblue;
   display: block;
   margin: 16px 0 8px 0;
   font-size: 16px;
@@ -777,9 +778,8 @@
   line-height: 1.4;
   color: #e5e7eb;
   position: relative;
-  padding-left: 16px;
   background: transparent;
-  font-weight: 400;
+  font-weight: 100;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: text;
@@ -790,7 +790,7 @@
 
 .message.bot .message-bubble li::before {
   content: "•";
-  color: #3b82f6;
+  color: aliceblue;
   font-weight: 600;
   position: absolute;
   left: 0;
@@ -825,6 +825,202 @@
   font-size: 11px;
   color: #888888;
   padding: 0 4px;
+}
+
+/* User Copy Button */
+.user-copy-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  margin-right: 8px;
+}
+
+.user-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  opacity: 0.7;
+  position: relative;
+}
+
+/* show user copy only on hover of message */
+.message.user:hover .user-copy-container { display: flex; }
+.message.user .user-copy-container { display: none; }
+
+.user-copy-btn:hover {
+  background: #4a4a4a;
+  color: #fff;
+  opacity: 1;
+}
+
+.user-copy-btn:hover::after {
+  content: 'Copy';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a2a;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-top: 4px;
+  z-index: 1000;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-copy-btn .copied-icon {
+  color: #fff;
+}
+
+/* Bot Message Hover Actions */
+.message-actions {
+  position: absolute;
+  top: 0;
+  right: -60px;
+  display: flex;
+  gap: 4px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  animation: fadeInActions 0.2s ease forwards;
+}
+
+/* Do not show hover action icons on user messages */
+.message.user .message-actions {
+  display: none !important;
+}
+
+@keyframes fadeInActions {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.message-action-btn:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.message-action-btn .copied-icon {
+  color: #10b981;
+}
+
+/* Ensure actions don't interfere with message layout */
+.message:hover .message-actions {
+  z-index: 10;
+}
+
+/* Bot actions bar */
+.bot-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.bot-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  color: #888;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  position: relative;
+}
+
+.bot-action-btn:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+/* Active feedback: color only the icon, no background */
+.bot-action-btn.active.good { background: transparent; color: #10b981; }
+.bot-action-btn.active.bad { background: transparent; color: #ef4444; }
+
+/* Preserve color on hover when active */
+.bot-action-btn.active.good:hover { background: transparent; color: #10b981; }
+.bot-action-btn.active.bad:hover { background: transparent; color: #ef4444; }
+
+/* Tooltip label shown below icon on hover */
+.bot-action-btn::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a2a;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-top: 6px;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.bot-action-btn:hover::after { opacity: 1; }
+
+/* Edit Message Input */
+.edit-message-input {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  line-height: 1.5;
+}
+
+.edit-message-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
 }
 
 /* Chat Input Area */
@@ -942,6 +1138,19 @@ button, input, select, textarea {
   background: #555555;
 }
 
+/* Listening visual state */
+.voice-btn.listening {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+  animation: pulseListening 1.2s ease-in-out infinite;
+}
+
+@keyframes pulseListening {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
 .send-btn {
   background: #4f46e5;
   color: #ffffff;
@@ -950,6 +1159,47 @@ button, input, select, textarea {
 .send-btn:hover {
   background: #4338ca;
 }
+
+/* Stop button shown during generation */
+.stop-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: #ef4444;
+  color: #ffffff;
+  position: relative;
+}
+
+.stop-btn:hover { background: #dc2626; }
+
+.stop-btn::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a2a;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-top: 6px;
+  z-index: 1000;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.stop-btn:hover::after { opacity: 1; }
 
 .input-disclaimer {
   font-size: 11px;
