@@ -132,9 +132,8 @@
 
 /* Listening state */
 .mic-button.listening {
-  background: rgba(34, 197, 94, 0.8);
-  border-color: rgba(34, 197, 94, 1);
-  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25);
+  background: #ef4444;
+  border-color: #ef4444;
   animation: micPulse 1.1s ease-in-out infinite;
 }
 

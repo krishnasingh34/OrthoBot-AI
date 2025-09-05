@@ -22,7 +22,8 @@ import {
   Square,
   Volume2,
   VolumeX,
-  Languages
+  Languages,
+  Share
 } from 'lucide-react';
 import Navbar from './Navbar';
 import '../CSS/Chat.css';
@@ -837,6 +838,93 @@ const Chat = () => {
     }
     closeContextMenu();
   };
+
+  const handleShare = async (sessionId) => {
+    const session = chatSessions.find(s => s.id === sessionId);
+    if (session) {
+      try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+        
+        const response = await fetch(`${backendUrl}/api/share/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            shareType: 'full_chat',
+            title: session.title,
+            messages: session.messages
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create share link');
+        }
+
+        const result = await response.json();
+        const shareUrl = `${window.location.origin}/share/${result.shareId}`;
+        
+        // Try to use Web Share API if available
+        if (navigator.share) {
+          await navigator.share({
+            title: `OrthoBot AI Chat: ${session.title}`,
+            text: `Check out this conversation from OrthoBot AI`,
+            url: shareUrl
+          });
+        } else {
+          // Fallback: Copy to clipboard
+          await navigator.clipboard.writeText(shareUrl);
+          alert('Share link copied to clipboard! Anyone with this link can view the conversation.');
+        }
+      } catch (error) {
+        console.error('Share failed:', error);
+        alert('Unable to create share link. Please try again.');
+      }
+    }
+    closeContextMenu();
+  };
+
+  // Share individual bot message
+  const handleShareMessage = async (message) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      
+      const response = await fetch(`${backendUrl}/api/share/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shareType: 'single_message',
+          title: `OrthoBot AI Response - ${message.timestamp}`,
+          singleMessage: message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create share link');
+      }
+
+      const result = await response.json();
+      const shareUrl = `${window.location.origin}/share/${result.shareId}`;
+      
+      // Try to use Web Share API if available
+      if (navigator.share) {
+        await navigator.share({
+          title: 'OrthoBot AI Response',
+          text: 'Check out this helpful response from OrthoBot AI',
+          url: shareUrl
+        });
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Share link copied to clipboard! Anyone with this link can view this response.');
+      }
+    } catch (error) {
+      console.error('Share message failed:', error);
+      alert('Unable to create share link. Please try again.');
+    }
+  };
   
 // Copy message functionality with formatting preservation for bot HTML
   const convertHtmlToPlainText = (html) => {
@@ -1113,6 +1201,13 @@ const Chat = () => {
             Download
           </button>
           <button 
+            className="context-menu-item"
+            onClick={() => handleShare(contextMenu.sessionId)}
+          >
+            <Share size={16} />
+            Share
+          </button>
+          <button 
             className="context-menu-item delete-item"
             onClick={() => handleDelete(contextMenu.sessionId)}
           >
@@ -1307,6 +1402,13 @@ const Chat = () => {
                           onClick={() => handleBotFeedback(message.id, 'bad')}
                         >
                           <ThumbsDown size={16} />
+                        </button>
+                        <button
+                          className="bot-action-btn"
+                          data-label="Share"
+                          onClick={() => handleShareMessage(message)}
+                        >
+                          <Share size={16} />
                         </button>
                       </div>
                     )}
