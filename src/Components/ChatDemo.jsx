@@ -17,6 +17,7 @@ const ChatDemo = () => {
 
 const ChatDemoContent = () => {
   const [inputValue, setInputValue] = useState('');
+  const [isListening, setIsListening] = useState(false);
 
   const popularQuestions = [
     "What exercises help with knee recovery?",
@@ -50,6 +51,52 @@ const ChatDemoContent = () => {
     sessionStorage.setItem('pendingQuestion', question);
     // Navigate to chat page
     window.location.href = '/chat';
+  };
+
+  const startVoice = () => {
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+        return;
+      }
+      if (isListening && window.__demoRecognition) {
+        window.__demoRecognition.stop();
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      window.__demoRecognition = recognition;
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      let finalTranscript = '';
+      setIsListening(true);
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        const text = (finalTranscript + interim).trim();
+        setInputValue(text);
+      };
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+        const text = (inputValue || '').trim();
+        if (text) handleSendMessage();
+      };
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
+    }
   };
 
   const containerVariants = {
@@ -106,10 +153,11 @@ const ChatDemoContent = () => {
               className="main-input"
             />
             <motion.button
-              className="mic-button"
+              className={`mic-button ${isListening ? 'listening' : ''}`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
+              onClick={startVoice}
             >
               <Mic size={20} />
             </motion.button>

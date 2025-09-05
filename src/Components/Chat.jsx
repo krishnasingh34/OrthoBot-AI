@@ -14,7 +14,15 @@ import {
   Edit2,
   Pin,
   Download,
-  Trash2
+  Trash2,
+  Copy,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  Square,
+  Volume2,
+  VolumeX,
+  Languages
 } from 'lucide-react';
 import Navbar from './Navbar';
 import '../CSS/Chat.css';
@@ -34,7 +42,72 @@ const Chat = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchModalQuery, setSearchModalQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [hoveredMessage, setHoveredMessage] = useState(null);
+  const [copiedMessage, setCopiedMessage] = useState(null);
+  const [messageFeedback, setMessageFeedback] = useState({}); // { [messageId]: 'good' | 'bad' }
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const startedByVoiceRef = useRef(false);
+  const currentUtteranceRef = useRef(null);
+  const voicesReadyRef = useRef(false);
+  const shouldAutoSpeakRef = useRef(false);
+
+  // Ensure voices are loaded; returns voices list (may be empty on some envs)
+  const getVoicesAsync = () => {
+    return new Promise((resolve) => {
+      try {
+        const synth = window.speechSynthesis;
+        if (!synth) return resolve([]);
+        let voices = synth.getVoices();
+        if (voices && voices.length > 0) {
+          voicesReadyRef.current = true;
+          return resolve(voices);
+        }
+        const handler = () => {
+          voices = synth.getVoices();
+          if (voices && voices.length > 0) {
+            synth.removeEventListener('voiceschanged', handler);
+            voicesReadyRef.current = true;
+            resolve(voices);
+          }
+        };
+        synth.addEventListener('voiceschanged', handler);
+        // Fallback timeout
+        setTimeout(() => {
+          synth.removeEventListener('voiceschanged', handler);
+          resolve(synth.getVoices());
+        }, 1500);
+      } catch (_) {
+        resolve([]);
+      }
+    });
+  };
+
+  // Try to pick best voice for a language tag (e.g., 'hi-IN', 'en-US')
+  const pickBestVoice = async (langTag) => {
+    const voices = await getVoicesAsync();
+    if (!voices || voices.length === 0) return null;
+    const norm = (s) => (s || '').toLowerCase();
+    const lang = norm(langTag);
+    // 1) exact startsWith match
+    let best = voices.find(v => norm(v.lang).startsWith(lang));
+    if (best) return best;
+    // 2) any contains 'hi' or 'en' depending on request
+    const needle = lang.includes('hi') ? 'hi' : (lang.includes('en') ? 'en' : lang.slice(0,2));
+    best = voices.find(v => norm(v.lang).includes(needle));
+    if (best) return best;
+    // 3) name hints
+    if (needle === 'hi') {
+      best = voices.find(v => /hindi|india|hi-?in/i.test(v.name));
+      if (best) return best;
+    }
+    return null;
+  };
 
   // Placeholder text for different languages
   const placeholders = {
@@ -100,6 +173,144 @@ const Chat = () => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Speak bot responses via TTS
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    // Only auto-speak if flagged (fresh response), not when loading chat history
+    if (!shouldAutoSpeakRef.current) return;
+    if (last.type !== 'bot' || last.isLoading) return;
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(
+          // If bot message contains HTML, read its textContent
+          (() => {
+            const temp = document.createElement('div');
+            temp.innerHTML = String(last.text || '');
+            return temp.textContent || temp.innerText || '';
+          })()
+        );
+        const lang = selectedLanguage === 'hi' ? 'hi-IN' : 'en-US';
+        utter.lang = lang;
+        // pick a voice asynchronously; if not found, let browser choose default
+        pickBestVoice(lang).then((match) => {
+          if (match) utter.voice = match;
+        }).finally(() => {
+          currentUtteranceRef.current = utter;
+          utter.onstart = () => { setIsSpeaking(true); setSpeakingMessageId(last.id); shouldAutoSpeakRef.current = false; };
+          utter.onend = () => { setIsSpeaking(false); setSpeakingMessageId(null); shouldAutoSpeakRef.current = false; };
+          utter.onerror = () => { setIsSpeaking(false); setSpeakingMessageId(null); shouldAutoSpeakRef.current = false; };
+          window.speechSynthesis.speak(utter);
+        });
+      }
+    } catch (e) {
+      console.warn('TTS failed:', e);
+    }
+  }, [messages, selectedLanguage]);
+
+  // Initialize and toggle Speech Recognition
+  const toggleVoice = () => {
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+        return;
+      }
+      if (isListening && recognitionRef.current) {
+        recognitionRef.current.stop();
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.lang = selectedLanguage === 'hi' ? 'hi-IN' : 'en-US';
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      let finalTranscript = '';
+      setIsListening(true);
+      startedByVoiceRef.current = true;
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        const text = (finalTranscript + interim).trim();
+        setInputValue(text);
+      };
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+        // Auto-send if we started recognition and have text
+        if (startedByVoiceRef.current) {
+          startedByVoiceRef.current = false;
+          const toSend = (inputValue || '').trim();
+          if (toSend) {
+            handleSendMessage(toSend);
+          }
+        }
+      };
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
+      console.warn('Voice start failed:', e);
+    }
+  };
+
+  // Utility: extract plain text from potentially HTML bot message
+  const getPlainFromHtml = (html) => {
+    const temp = document.createElement('div');
+    temp.innerHTML = String(html || '');
+    return temp.textContent || temp.innerText || '';
+  };
+
+  // Detect if text contains Hindi/Devanagari script
+  const containsHindi = (text) => {
+    const hindiRegex = /[\u0900-\u097F]/;
+    return hindiRegex.test(text);
+  };
+
+  // Start speaking a message (auto-detect language or force specific lang)
+  const startSpeaking = async (message, forceLang = null) => {
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const text = message.type === 'bot' ? getPlainFromHtml(message.text) : String(message.text || '');
+      const utter = new SpeechSynthesisUtterance(text);
+      // Auto-detect language: Hindi if Devanagari script present, otherwise English
+      const lang = forceLang || (containsHindi(text) ? 'hi-IN' : 'en-US');
+      utter.lang = lang;
+      const match = await pickBestVoice(lang);
+      if (match) utter.voice = match;
+      currentUtteranceRef.current = utter;
+      utter.onstart = () => { setIsSpeaking(true); setSpeakingMessageId(message.id); };
+      utter.onend = () => { setIsSpeaking(false); setSpeakingMessageId(null); };
+      utter.onerror = () => { setIsSpeaking(false); setSpeakingMessageId(null); };
+      window.speechSynthesis.speak(utter);
+    } catch (e) {
+      setIsSpeaking(false);
+    }
+  };
+
+  const stopSpeaking = () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } finally {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    }
+  };
+
 
   // Extract intent from user query (ChatGPT style)
   const extractIntent = (text) => {
@@ -224,6 +435,9 @@ const Chat = () => {
 
   // Backend API integration for real-time responses
   const getBackendResponse = async (userMessage, currentMessages) => {
+    setIsGenerating(true);
+    // Mark that the next bot message should be auto spoken
+    shouldAutoSpeakRef.current = true;
     // Add loading message
     const loadingMessage = {
       id: Date.now() + 1,
@@ -237,6 +451,9 @@ const Chat = () => {
     setMessages(messagesWithLoading);
 
     try {
+      // prepare abort controller for cancellation
+      abortControllerRef.current = new AbortController();
+      const { signal } = abortControllerRef.current;
       // Try multiple backend URL formats
       const backendUrls = [
         `${import.meta.env.VITE_BACKEND_URL}/askAI`,
@@ -259,6 +476,7 @@ const Chat = () => {
               // 'Access-Control-Allow-Origin': '*'
             },
             mode: 'cors',
+            signal,
             body: JSON.stringify({
               question: userMessage,
               message: userMessage,
@@ -275,6 +493,9 @@ const Chat = () => {
             lastError = `Status ${response.status}`;
           }
         } catch (fetchError) {
+          if (signal.aborted) {
+            throw new Error('aborted');
+          }
           console.log(`URL ${url} failed with error:`, fetchError.message);
           lastError = fetchError.message;
           continue;
@@ -315,30 +536,38 @@ const Chat = () => {
       ));
 
     } catch (error) {
-      console.error('Error getting backend response:', error);
-      
-      // Remove loading message and add error response
-      const botResponse = {
-        id: Date.now() + 2,
-        type: 'bot',
-        text: `Connection failed: ${error.message}. Please check if your backend server is running and accessible. You can try refreshing the page or contact support.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      const finalMessages = [...currentMessages, botResponse];
-      setMessages(finalMessages);
-      
-      // Update session with error response
-      setChatSessions(prev => prev.map(session => 
-        session.id === currentSessionId 
-          ? { ...session, messages: finalMessages, lastUpdated: new Date().toISOString() }
-          : session
-      ));
+      if (error.message === 'aborted') {
+        // user stopped generation: remove loading and do nothing
+        setMessages(prev => prev.filter(m => !m.isLoading));
+      } else {
+        console.error('Error getting backend response:', error);
+        // Remove loading message and add error response
+        const botResponse = {
+          id: Date.now() + 2,
+          type: 'bot',
+          text: `Connection failed: ${error.message}. Please check if your backend server is running and accessible. You can try refreshing the page or contact support.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        const finalMessages = [...currentMessages, botResponse];
+        setMessages(finalMessages);
+        // Update session with error response
+        setChatSessions(prev => prev.map(session => 
+          session.id === currentSessionId 
+            ? { ...session, messages: finalMessages, lastUpdated: new Date().toISOString() }
+            : session
+        ));
+      }
+    }
+    finally {
+      setIsGenerating(false);
+      abortControllerRef.current = null;
     }
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
       handleSendMessage();
     }
   };
@@ -382,6 +611,8 @@ const Chat = () => {
       setMessages(session.messages);
       setCurrentSessionId(sessionId);
       setIsWelcomeScreen(session.messages.length === 0);
+      // Prevent auto-speaking when loading existing conversations
+      shouldAutoSpeakRef.current = false;
     }
   };
 
@@ -455,86 +686,149 @@ const Chat = () => {
           createPDFDocument();
         }
       };
-
+  
       const createPDFDocument = () => {
         try {
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
-          
+  
           // Set up document
           let yPos = 20;
-          const pageHeight = 280;
+          const pageHeight = 270;
           const margin = 20;
-          
+  
+          // Helper to add text with wrapping
+          const addText = (text, x, y, options = {}) => {
+            const { bold = false, fontSize = 10, maxWidth = 170, indent = 0 } = options;
+  
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.setFontSize(fontSize);
+  
+            const actualWidth = maxWidth - indent;
+            const lines = doc.splitTextToSize(text, actualWidth);
+            const height = lines.length * 5;
+  
+            // Page break check
+            if (y + height > pageHeight - 10) {
+              doc.addPage();
+              y = 20;
+            }
+  
+            doc.text(lines, x + indent, y);
+            return y + height;
+          };
+  
           // Title
-          doc.setFontSize(18);
-          doc.setFont(undefined, 'bold');
-          doc.text(session.title, margin, yPos);
-          yPos += 15;
-          
+          yPos = addText(session.title, margin, yPos, { bold: true, fontSize: 18 }) + 4;
+  
           // Metadata
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'normal');
-          doc.text(`Created: ${new Date(session.createdAt).toLocaleDateString()}`, margin, yPos);
-          yPos += 8;
-          doc.text(`Last Updated: ${new Date(session.lastUpdated).toLocaleDateString()}`, margin, yPos);
-          yPos += 15;
-          
+          yPos = addText(`Created: ${new Date(session.createdAt).toLocaleDateString()}`, margin, yPos, { fontSize: 9 }) + 1;
+          yPos = addText(`Last Updated: ${new Date(session.lastUpdated).toLocaleDateString()}`, margin, yPos, { fontSize: 9 }) + 3;
+  
           // Separator line
           doc.line(margin, yPos, 190, yPos);
           yPos += 10;
-          
+  
           // Chat History header
-          doc.setFontSize(14);
-          doc.setFont(undefined, 'bold');
-          doc.text('Chat History', margin, yPos);
-          yPos += 15;
-          
-          // Messages
-          session.messages.forEach((message, index) => {
-            // Check if we need a new page
-            if (yPos > pageHeight) {
-              doc.addPage();
-              yPos = 20;
-            }
-            
-            // Message header
-            doc.setFontSize(11);
-            doc.setFont(undefined, 'bold');
+          yPos = addText('Chat History', margin, yPos, { bold: true, fontSize: 14 }) + 4;
+  
+          // Section headings we want bold
+          const sectionHeadings = [
+            "What's Likely Happening:",
+            "Here's What You Can Do:",
+            "Watch for These Signs:",
+            "Suggestions for You:"
+            // "Disclaimer:" handled separately
+          ];
+  
+          const isSectionHeading = (t) =>
+            sectionHeadings.some(h => t.startsWith(h));
+  
+          // Process messages
+          session.messages.forEach((message) => {
             const sender = message.type === 'user' ? 'User' : 'OrthoBot';
-            doc.text(`${sender} (${message.timestamp}):`, margin, yPos);
-            yPos += 8;
-            
-            // Message content
-            doc.setFont(undefined, 'normal');
-            doc.setFontSize(10);
-            const splitText = doc.splitTextToSize(message.text, 170);
-            
-            // Check if message content fits on current page
-            const textHeight = splitText.length * 5;
-            if (yPos + textHeight > pageHeight) {
-              doc.addPage();
-              yPos = 20;
+            const headerBold = sender === 'OrthoBot';
+            yPos = addText(`${sender} (${message.timestamp}):`, margin, yPos, { bold: headerBold, fontSize: 11 }) + 2;
+  
+            if (message.type === 'bot') {
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = message.text;
+  
+              const processElement = (element) => {
+                if (element.nodeType === Node.TEXT_NODE) {
+                  let text = element.textContent.replace(/\s+/g, ' ').trim();
+                  if (!text) return;
+  
+                  // Skip disclaimer-like text here (we’ll handle it once later)
+                  const disclaimerLike = /^\s*(?:⚠️\s*)?Disclaimer:/i.test(text);
+                  if (disclaimerLike) return;
+  
+                  if (isSectionHeading(text)) {
+                    yPos = addText(text, margin, yPos, { bold: true, fontSize: 12 }) + 4;
+                  } else {
+                    yPos = addText(text, margin, yPos, { fontSize: 10 }) + 2;
+                  }
+                } else if (element.nodeType === Node.ELEMENT_NODE) {
+                  const tag = element.tagName.toLowerCase();
+  
+                  if (tag === 'ul') {
+                    element.querySelectorAll('li').forEach(li => {
+                      const t = li.textContent.replace(/\s+/g, ' ').trim();
+                      if (t) yPos = addText(`${t}`, margin, yPos, { indent: 8 }) + 2;
+                    });
+                    yPos += 2;
+                  } else {
+                    for (let child of element.childNodes) processElement(child);
+                  }
+                }
+              };
+  
+              // Process main content
+              for (let child of tempDiv.childNodes) {
+                processElement(child);
+              }
+  
+              // Handle Disclaimer once, clean
+              if (message.text.includes('Disclaimer:')) {
+                const cleanText = (s) =>
+                  (s || '').replace(/\s+/g, ' ').replace(/^\s*(?:⚠️\s*)?/, '').trim();
+  
+                let disclaimerBody = '';
+                const match = message.text.match(/Disclaimer:\s*([\s\S]*)$/i);
+                if (match && match[1]) {
+                  disclaimerBody = cleanText(match[1]);
+                }
+  
+                if (disclaimerBody) {
+                  yPos += 6; // spacing before disclaimer
+                  yPos = addText('Disclaimer:', margin, yPos, { bold: true, fontSize: 12 }) + 2;
+                  yPos = addText(disclaimerBody, margin, yPos, { fontSize: 10 }) + 2;
+                }
+              }
+  
+            } else {
+              // User message
+              yPos = addText(message.text, margin, yPos, { fontSize: 10 }) + 2;
             }
-            
-            doc.text(splitText, margin, yPos);
-            yPos += textHeight + 10;
+  
+            yPos += 3; // spacing between messages
           });
-          
-          // Save PDF with exact session title
+  
+          // Save PDF
           const fileName = session.title.replace(/[<>:"/\\|?*]/g, '').trim();
           doc.save(`${fileName}.pdf`);
-          
         } catch (error) {
           console.error('PDF generation error:', error);
           alert('Failed to generate PDF. Please try again.');
         }
       };
-      
+  
       generatePDF();
     }
     closeContextMenu();
   };
+  
+  
 
   const handleDelete = (sessionId) => {
     setChatSessions(prev => prev.filter(session => session.id !== sessionId));
@@ -543,6 +837,103 @@ const Chat = () => {
     }
     closeContextMenu();
   };
+  
+// Copy message functionality with formatting preservation for bot HTML
+  const convertHtmlToPlainText = (html) => {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    let output = '';
+  
+    const walk = (node, inList = false) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        output += node.textContent.trim();
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+  
+      const tag = node.tagName.toLowerCase();
+  
+      if (tag === 'br') {
+        output += '\n';
+        return;
+      }
+  
+      if (tag === 'li') {
+        node.childNodes.forEach((child) => walk(child, true));
+        output += '\n';
+        return;
+      }
+  
+      const blockTags = [
+        'p', 'div', 'section', 'article', 'header', 'footer',
+        'h1','h2','h3','h4','h5','h6'
+      ];
+      const isBlock = blockTags.includes(tag);
+      const isList = tag === 'ul' || tag === 'ol';
+  
+      // ensure spacing before block
+      if (isBlock && !output.endsWith('\n\n') && output !== '') {
+        output += '\n\n';
+      }
+  
+      node.childNodes.forEach((child) => walk(child, inList || isList));
+  
+      // ensure spacing after block
+      if (isBlock && !output.endsWith('\n\n')) {
+        output += '\n\n';
+      }
+    };
+  
+    container.childNodes.forEach((child) => walk(child));
+  
+    return output
+      .replace(/\u00a0/g, ' ')
+      .replace(/[ \t]+\n/g, '\n') // clean spaces before line breaks
+      .replace(/\n{3,}/g, '\n\n') // collapse >2 newlines into exactly 2
+      .trim();
+  };
+  
+
+  const handleCopyMessage = async (messageOrText) => {
+    try {
+      const isObject = typeof messageOrText === 'object' && messageOrText !== null;
+      const text = isObject ? messageOrText.text : messageOrText;
+      const isBotHtml = isObject && messageOrText.type === 'bot';
+      const plain = isBotHtml ? convertHtmlToPlainText(text) : String(text);
+
+      if (isBotHtml && window.ClipboardItem && navigator.clipboard?.write) {
+        const blobHtml = new Blob([text], { type: 'text/html' });
+        const blobText = new Blob([plain], { type: 'text/plain' });
+        await navigator.clipboard.write([
+          new window.ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(plain);
+      }
+      setCopiedMessage(Date.now());
+      setTimeout(() => setCopiedMessage(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy message:', err);
+      // Fallback for older browsers
+      const fallbackText = (typeof messageOrText === 'object' && messageOrText?.type === 'bot')
+        ? convertHtmlToPlainText(messageOrText.text)
+        : String(messageOrText);
+      const textArea = document.createElement('textarea');
+      textArea.value = fallbackText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedMessage(Date.now());
+      setTimeout(() => setCopiedMessage(null), 2000);
+    }
+  };
+
+  // Handle feedback on bot messages
+  const handleBotFeedback = (messageId, type) => {
+    setMessageFeedback(prev => ({ ...prev, [messageId]: type }));
+  };
+
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -838,6 +1229,8 @@ const Chat = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  onMouseEnter={() => setHoveredMessage(message.id)}
+                  onMouseLeave={() => setHoveredMessage(null)}
                 >
                   <div className="message-avatar">
                     {message.type === 'user' ? (
@@ -852,11 +1245,71 @@ const Chat = () => {
                         <p><span className="loading-dots"></span></p>
                       ) : message.type === 'bot' ? (
                         <div dangerouslySetInnerHTML={{ __html: message.text }} />
-                      ) : (
+) : (
                         <p>{message.text}</p>
                       )}
                     </div>
-                    <span className="message-time">{message.timestamp}</span>
+                    {/* Bot timestamp removed as requested */}
+                    
+                    {/* Copy Button for User Messages */}
+                    {message.type === 'user' && !message.isLoading && hoveredMessage === message.id && (
+                      <div className="user-copy-container">
+                        <button
+                          className="user-copy-btn"
+                          onClick={() => handleCopyMessage(message)}
+                        >
+                          {copiedMessage && Date.now() - copiedMessage < 2000 ? (
+                            <Check size={14} className="copied-icon" />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Bot actions bar */}
+                    {message.type === 'bot' && !message.isLoading && (
+                      <div className={`bot-actions ${messageFeedback[message.id] ? 'has-feedback' : ''}`}>
+                        <button
+                          className="bot-action-btn"
+                          data-label="Copy"
+                          onClick={() => handleCopyMessage(message)}
+                        >
+                          {copiedMessage && Date.now() - copiedMessage < 2000 ? (
+                            <Check size={16} />
+                          ) : (
+                            <Copy size={16} />
+                          )}
+                        </button>
+                        <button
+                          className={`bot-action-btn ${isSpeaking && speakingMessageId === message.id ? 'active' : ''}`}
+                          data-label={isSpeaking && speakingMessageId === message.id ? 'Stop speaking' : 'Read aloud'}
+                          onClick={() => {
+                            if (isSpeaking && speakingMessageId === message.id) {
+                              stopSpeaking();
+                            } else {
+                              startSpeaking(message);
+                            }
+                          }}
+                        >
+                          {isSpeaking && speakingMessageId === message.id ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                        </button>
+                        <button
+                          className={`bot-action-btn ${messageFeedback[message.id] === 'good' ? 'active good' : ''}`}
+                          data-label="Good response"
+                          onClick={() => handleBotFeedback(message.id, 'good')}
+                        >
+                          <ThumbsUp size={16} />
+                        </button>
+                        <button
+                          className={`bot-action-btn ${messageFeedback[message.id] === 'bad' ? 'active bad' : ''}`}
+                          data-label="Bad response"
+                          onClick={() => handleBotFeedback(message.id, 'bad')}
+                        >
+                          <ThumbsDown size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -884,12 +1337,31 @@ const Chat = () => {
                 <option value="en">English</option>
                 <option value="hi">हिंदी</option>
               </select>
-              <button className="voice-btn">
+              <button className={`voice-btn ${isListening ? 'listening' : ''}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleVoice(); }}>
                 <Mic size={20} />
               </button>
-              <button className="send-btn" onClick={handleSendMessage}>
-                <Send size={20} />
-              </button>
+              {isGenerating ? (
+                <button
+                  className="stop-btn"
+                  data-label="Stop response"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (abortControllerRef.current) {
+                      abortControllerRef.current.abort();
+                    }
+                    // ensure UI resets and loading removed
+                    setIsGenerating(false);
+                    setMessages(prev => prev.filter(m => !m.isLoading));
+                  }}
+                >
+                  <Square size={18} />
+                </button>
+              ) : (
+                <button className="send-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSendMessage(); }}>
+                  <Send size={20} />
+                </button>
+              )}
             </div>
           </div>
           <p className="input-disclaimer">
@@ -900,5 +1372,4 @@ const Chat = () => {
     </div>
   );
 };
-
 export default Chat;
