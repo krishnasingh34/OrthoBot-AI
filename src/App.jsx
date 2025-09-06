@@ -9,6 +9,7 @@ import ChatDemo from './Components/ChatDemo';
 import FAQ from './Components/FAQ';
 import Footer from './Components/Footer';
 import Chat from './Components/Chat';
+import SharedChatViewer from './Components/SharedChatViewer';
 
 const HomePage = ({ scrollToTop }) => {
   return (
@@ -49,6 +50,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage scrollToTop={scrollToTop} />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/share/:shareId" element={<SharedChatViewer />} />
         </Routes>
       </div>
     </Router>

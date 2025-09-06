@@ -1,6 +1,34 @@
-# OrthoBot AI – Virtual healthcare assistant for post-op care
+# OrthoBot AI – Virtual Healthcare Assistant for Post-Op Care
 
-OrthoBot AI – A virtual healthcare assistant for post-op care, built with React and Node.js, featuring an AI-powered knowledge base, voice chat, and responsive UI for 24/7 recovery guidance.
+**OrthoBot AI** is a virtual healthcare assistant built with **React (frontend)** and **Node.js (backend)**. It provides AI-powered recovery guidance, rehab routines, diet plans, and real-time chat support for patients after orthopedic surgery.
+
+---
+
+## 📑 Table of Contents
+
+1. [Features](#-features)  
+2. [Tech Stack](#-tech-stack)  
+   - [Frontend](#frontend)  
+   - [Backend](#backend)  
+3. [Project Structure](#-project-structure)  
+4. [Prerequisites](#-prerequisites)  
+5. [Quick Start](#-quick-start)  
+   - [Clone and Install](#1-clone-and-install)  
+   - [Backend Setup](#2-backend-setup)  
+   - [Start Development Servers](#3-start-development-servers)  
+6. [Configuration](#-configuration)  
+   - [Environment Variables](#environment-variables)  
+7. [MongoDB Atlas Setup Guide](#-mongodb-atlas-setup-guide)  
+   - [Step-by-Step MongoDB Atlas Configuration](#step-by-step-mongodb-atlas-configuration)  
+   - [8. Database Structure](#8-database-structure)  
+   - [Security Best Practices](#security-best-practices)  
+8. [Troubleshooting](#-troubleshooting)  
+9. [License](#-license)  
+10. [Contributing](#-contributing)  
+11. [Support](#-support)  
+
+
+---
 
 ## 🚀 Features
 
@@ -10,6 +38,8 @@ OrthoBot AI – A virtual healthcare assistant for post-op care, built with Reac
 - **User Authentication**: Secure login/signup powered by Clerk
 - **Responsive Design**: React-based frontend designed for smooth, mobile-friendly patient experience
 
+---
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -17,9 +47,9 @@ OrthoBot AI – A virtual healthcare assistant for post-op care, built with Reac
 - Clerk for secure login/signup with session management
 - Conversational UI optimized for patient–bot interactions
 - Built-in speech-to-text and text-to-speech for natural communication
-- Built-in speech-to-text and text-to-speech for natural communication
+- Built-in speech-to-text and text-to-speech for natural communication  
 
-### Backend
+### Backend 
 - Node.js with Express for API handling
 - CORS enabled for secure frontend-backend communication
 - JSON-based knowledge base for structured post-op orthopedic data
@@ -27,12 +57,29 @@ OrthoBot AI – A virtual healthcare assistant for post-op care, built with Reac
 - Groq API integration for AI-driven patient-friendly answers
 - Environment variables for secure API key management
 - Error logging and reliable response handling
+- MongoDB Atlas (cloud database) 
+---
+
+## 📂 Project Structure
+
+```
+orthobot-ai/
+├── frontend/       # React + Vite (UI, Clerk auth, voice features)
+├── backend/        # Node.js + Express (APIs, MongoDB, Groq AI)
+├── README.md       # Project documentation
+└── package.json    # Root config for scripts
+```
+
+---
 
 ## 📋 Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Groq API key ([Get one here](https://console.groq.com/))
+- Node.js (v16 or higher)  
+- npm or yarn  
+- Groq API key → [Get one here](https://console.groq.com/)  
+- MongoDB Atlas account → [Sign up here](https://cloud.mongodb.com)  
+
+---
 
 ## 🚀 Quick Start
 
@@ -47,20 +94,17 @@ npm run install:all
 ```bash
 cd backend
 
-# Option A: Copy from example file
-cp env.example .env
-# Then edit .env and replace 'your_groq_api_key_here' with your actual API key
+# Copy example file
+cp .env.example .env
 
-# Option B: Create manually
-# Create a new file called .env with this content:
+# Edit .env with your API key
 # GROQ_API_KEY=your_actual_groq_api_key_here
 # PORT=3000
+```
 
-cd ..
-
-# Option C: Use the setup script (Windows)
+Or use the Windows setup script:
+```bash
 npm run setup:env
-# Then edit backend/.env with your actual API key
 ```
 
 ### 3. Start Development Servers
@@ -73,18 +117,56 @@ npm run dev:full
 # Terminal 2: npm run backend (backend on :3000)
 ```
 
+---
+
 ## 🔧 Configuration
 
 ### Environment Variables
-**IMPORTANT**: You must create a `.env` file in the `backend/` directory with your Groq API key.
+Create a `.env` file inside the `backend/` folder:
 
-The file should contain:
 ```env
 GROQ_API_KEY=your_actual_groq_api_key_here
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/orthobot
 PORT=3000
 ```
 
-**Note**: Without a valid Groq API key, the AI summarization features will not work.
+---
+
+## 🍃 MongoDB Atlas Setup Guide
+
+### Step-by-Step MongoDB Atlas Configuration
+1. Create an Atlas account → [cloud.mongodb.com](https://cloud.mongodb.com)  
+2. Create free cluster (M0, AWS recommended)  
+3. Configure Database User + Network Access  
+4. Copy connection string (Node.js driver)  
+5. Add to `.env` as `MONGODB_URI`  
+
+---
+
+### 8. Database Structure
+
+#### `SharedChats` Collection
+```javascript
+{
+  shareId: "uuid-string",
+  shareType: "full_chat" | "single_message",
+  title: "Chat title",
+  messages: [...],
+  singleMessage: {...},
+  createdAt: Date,
+  viewCount: Number,
+  expiresAt: Date
+}
+```
+
+---
+
+### Security Best Practices
+- Never commit `.env` to GitHub  
+- Restrict IPs in production  
+- Use strong DB passwords & rotate regularly  
+
+---
 
 ## 🐛 Troubleshooting
 

@@ -1140,7 +1140,7 @@ button, input, select, textarea {
 
 /* Listening visual state */
 .voice-btn.listening {
-  background: #22c55e;
+  background: #ef4444;
   box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
   animation: pulseListening 1.2s ease-in-out infinite;
 }
