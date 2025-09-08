@@ -1,0 +1,323 @@
+/* About Us Page Styles */
+.about-us {
+    padding-top: 0;
+  }
+  
+  /* Header Section */
+  .about-header {
+    position: relative;
+    background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url('../assets/about_us.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    padding: 110px 0 60px;
+    text-align: center;
+    min-height: 45vh;
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+  }
+  
+  .header-content h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    margin: 0 0 10px 0;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+  
+  .header-content h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin: 0;
+    opacity: 0.95;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  
+  /* About Section */
+  .about-section {
+    background: white;
+    padding: 80px 0;
+  }
+  
+  .about-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  .about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+  
+  .about-text h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 10px 0;
+  }
+  
+  .about-text h4 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f97316;
+    margin: 0 0 10px 0;
+  }
+  
+  .qualifications {
+    font-size: 1.125rem;
+    color: #64748b;
+    margin: 0 0 10px 0;
+    font-weight: 500;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin: 0 0 20px 0;
+    font-weight: 600;
+  }
+  
+  .description {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0 0 20px 0;
+  }
+  
+  .about-image {
+    display: flex;
+    justify-content: flex-end; /* push image more to the right */
+    align-items: flex-start; /* lift the image upward */
+  }
+  
+  .about-image img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 620px; /* slightly larger */
+    object-fit: contain; /* show full transparent PNG like hero */
+    object-position: center;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    transform: translate(12px, -8px); /* nudge right and up */
+  }
+  
+  /* Know More Section */
+  .know-more-section {
+    background: #ffffff; /* match white background, remove card-like look */
+    padding: 10px 0 60px; /* further reduce top gap above the heading */
+  }
+  
+  .know-more-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  .know-more-container h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f97316;
+    text-align: center;
+    margin: 0 0 40px 0;
+  }
+  
+  .know-more-content {
+    max-width: 1100px; /* increased width for better readability */
+    margin: 0 auto;
+  }
+  
+  .know-more-content p {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #475569;
+    margin: 0 0 20px 0;
+  }
+  
+  .know-more-content strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+  
+  .legal-info {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #f97316;
+    margin-top: 30px;
+  }
+  
+  .legal-info p {
+    margin: 0;
+    font-size: 1rem;
+    color: #64748b;
+  }
+  
+  /* Achievements Section */
+  .achievements-section {
+    background: white;
+    padding: 10px 0 100px; /* standardized footer gap */
+  }
+  
+  .achievements-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  .achievements-container h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f97316;
+    text-align: center;
+    margin: 0 0 50px 0;
+  }
+  
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+  
+  .achievement-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+  }
+  
+  .achievement-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .achievement-icon {
+    color: #f97316;
+    margin-bottom: 1rem;
+  }
+  
+  .achievement-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+  
+  .achievement-label {
+    font-size: 1rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .about-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      text-align: left;
+    }
+    
+    .about-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .about-image img {
+      width: 320px;
+      height: 380px;
+      object-fit: contain;
+      transform: none;
+    }
+    
+    .header-content h1 {
+      font-size: 2rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1.125rem;
+    }
+    
+    .about-text h4 {
+      font-size: 2rem;
+    }
+    
+    .know-more-container h3,
+    .achievements-container h3 {
+      font-size: 2rem;
+    }
+    
+    .achievements-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .achievement-number {
+      font-size: 2rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .about-container,
+    .know-more-container,
+    .achievements-container {
+      padding: 0 1rem;
+    }
+    
+    .about-section {
+      padding: 60px 0;
+    }
+    
+    .achievements-section {
+      padding: 5px 0 60px;
+    }
+    
+    /* keep smaller gap above the heading on mobile too */
+    .know-more-section {
+      padding: 15px 0 60px;
+    }
+    
+    .header-content h1 {
+      font-size: 1.75rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1.125rem;
+    }
+    
+    .about-text h4 {
+      font-size: 1.75rem;
+    }
+    
+    .about-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .about-image img {
+      width: 300px;
+      height: 360px;
+      object-fit: contain;
+      transform: none;
+    }
+    
+    .achievements-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  

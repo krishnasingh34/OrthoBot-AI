@@ -30,10 +30,11 @@ const ChatDemoContent = () => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (source = 'text') => {
     if (inputValue.trim()) {
-      // Store question in sessionStorage for immediate access
+      // Store question and source in sessionStorage for immediate access
       sessionStorage.setItem('pendingQuestion', inputValue.trim());
+      sessionStorage.setItem('pendingQuestionSource', source);
       // Navigate to chat page
       window.location.href = '/chat';
       setInputValue('');
@@ -47,8 +48,9 @@ const ChatDemoContent = () => {
   };
 
   const handleQuestionClick = (question) => {
-    // Store question in sessionStorage for immediate access
+    // Store question and source in sessionStorage for immediate access
     sessionStorage.setItem('pendingQuestion', question);
+    sessionStorage.setItem('pendingQuestionSource', 'text');
     // Navigate to chat page
     window.location.href = '/chat';
   };
@@ -91,7 +93,7 @@ const ChatDemoContent = () => {
       recognition.onend = () => {
         setIsListening(false);
         const text = (inputValue || '').trim();
-        if (text) handleSendMessage();
+        if (text) handleSendMessage('voice');
       };
       recognition.start();
     } catch (e) {
@@ -146,11 +148,12 @@ const ChatDemoContent = () => {
             </div>
             <input
               type="text"
-              placeholder="Ask about recovery, exercises, or treatment options..."
+              placeholder={isListening ? 'Listening...' : 'Ask about recovery, exercises, or treatment options...'}
               value={inputValue}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="main-input"
+              className={`main-input ${isListening ? 'listening-placeholder' : ''}`}
+              disabled={isListening}
             />
             <motion.button
               className={`mic-button ${isListening ? 'listening' : ''}`}

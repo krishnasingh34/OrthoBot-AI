@@ -7,13 +7,9 @@ import {
   Search,
   Menu,
   User,
-  Settings,
-  MessageSquare,
-  ChevronDown,
   MoreVertical,
   Edit2,
   Pin,
-  Download,
   Trash2,
   Copy,
   Check,
@@ -22,7 +18,6 @@ import {
   Square,
   Volume2,
   VolumeX,
-  Languages,
   Share
 } from 'lucide-react';
 import Navbar from './Navbar';
@@ -44,7 +39,7 @@ const Chat = () => {
   const [searchModalQuery, setSearchModalQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [hoveredMessage, setHoveredMessage] = useState(null);
-  const [copiedMessage, setCopiedMessage] = useState(null);
+    const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [messageFeedback, setMessageFeedback] = useState({}); // { [messageId]: 'good' | 'bad' }
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -121,18 +116,31 @@ const Chat = () => {
     setSelectedLanguage(e.target.value);
   };
 
-  // Load chat sessions from localStorage on component mount
+  // Load chat sessions and current session from localStorage on component mount
   useEffect(() => {
     const savedSessions = localStorage.getItem('orthobotChatSessions');
+    const savedCurrentSessionId = localStorage.getItem('orthobotCurrentSessionId');
+    let sessions = [];
     if (savedSessions) {
-      setChatSessions(JSON.parse(savedSessions));
+      sessions = JSON.parse(savedSessions);
+      setChatSessions(sessions);
     }
-    
-    // Add chat-page class to body to disable scrolling
-    document.body.classList.add('chat-page');
-    
-    // Cleanup: remove class when component unmounts
-    return () => {
+
+    if (savedCurrentSessionId && sessions.some(s => s.id === savedCurrentSessionId)) {
+      const session = sessions.find(s => s.id === savedCurrentSessionId);
+      if (session) {
+        setMessages(session.messages);
+        setCurrentSessionId(session.id);
+        setIsWelcomeScreen(session.messages.length === 0);
+      }
+    } else {
+        // if no current session, or it's invalid, start fresh
+        setCurrentSessionId(null);
+        setIsWelcomeScreen(true);
+        setMessages([]);
+    }
+        document.body.classList.add('chat-page');
+        return () => {
       document.body.classList.remove('chat-page');
     };
   }, []);
@@ -140,14 +148,16 @@ const Chat = () => {
   // Handle pending question after component is fully loaded
   useEffect(() => {
     const pendingQuestion = sessionStorage.getItem('pendingQuestion');
+    const source = sessionStorage.getItem('pendingQuestionSource') || 'text';
     if (pendingQuestion) {
       // Set the input value and auto-send
       setInputValue(pendingQuestion);
       setTimeout(() => {
-        processIncomingQuestion(pendingQuestion);
+        processIncomingQuestion(pendingQuestion, source);
       }, 500);
       // Clear pending question
       sessionStorage.removeItem('pendingQuestion');
+      sessionStorage.removeItem('pendingQuestionSource');
     }
   }, [chatSessions]);
 
@@ -155,6 +165,15 @@ const Chat = () => {
   useEffect(() => {
     localStorage.setItem('orthobotChatSessions', JSON.stringify(chatSessions));
   }, [chatSessions]);
+
+  // Save current session ID to localStorage
+  useEffect(() => {
+    if (currentSessionId) {
+      localStorage.setItem('orthobotCurrentSessionId', currentSessionId);
+    } else {
+      localStorage.removeItem('orthobotCurrentSessionId');
+    }
+  }, [currentSessionId]);
 
   // Auto-save current chat messages when they change
   useEffect(() => {
@@ -255,7 +274,7 @@ const Chat = () => {
           startedByVoiceRef.current = false;
           const toSend = (inputValue || '').trim();
           if (toSend) {
-            handleSendMessage(toSend);
+            handleSendMessage(toSend, 'voice');
           }
         }
       };
@@ -361,7 +380,7 @@ const Chat = () => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = (questionText = null) => {
+  const handleSendMessage = (questionText = null, source = 'text') => {
     const messageText = questionText || inputValue.trim();
     if (messageText) {
       setIsWelcomeScreen(false);
@@ -399,12 +418,12 @@ const Chat = () => {
       setInputValue('');
       
       // Get AI response using Backend API
-      getBackendResponse(messageText, updatedMessages);
+      getBackendResponse(messageText, updatedMessages, source);
     }
   };
 
   // Process incoming question from ChatDemo
-  const processIncomingQuestion = (questionText) => {
+  const processIncomingQuestion = (questionText, source = 'text') => {
     setIsWelcomeScreen(false);
     const newMessage = {
       id: Date.now(),
@@ -431,14 +450,14 @@ const Chat = () => {
     setInputValue('');
     
     // Get AI response using Backend API
-    getBackendResponse(questionText, updatedMessages);
+    getBackendResponse(questionText, updatedMessages, source);
   };
 
   // Backend API integration for real-time responses
-  const getBackendResponse = async (userMessage, currentMessages) => {
+  const getBackendResponse = async (userMessage, currentMessages, source = 'text') => {
     setIsGenerating(true);
-    // Mark that the next bot message should be auto spoken
-    shouldAutoSpeakRef.current = true;
+    // Mark that the next bot message should be auto spoken only if initiated by voice
+    shouldAutoSpeakRef.current = source === 'voice';
     // Add loading message
     const loadingMessage = {
       id: Date.now() + 1,
@@ -664,172 +683,8 @@ const Chat = () => {
         ? { ...session, pinned: !session.pinned }
         : session
     ));
-    closeContextMenu();
-  };
-
-  const handleDownload = async (sessionId) => {
-    const session = chatSessions.find(s => s.id === sessionId);
-    if (session) {
-      // Simple and reliable PDF generation
-      const generatePDF = () => {
-        // Load jsPDF from CDN
-        if (!document.getElementById('jspdf-script')) {
-          const script = document.createElement('script');
-          script.id = 'jspdf-script';
-          script.src = 'https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js';
-          script.onload = () => createPDFDocument();
-          script.onerror = () => {
-            console.error('Failed to load jsPDF');
-            alert('Failed to generate PDF. Please try again.');
-          };
-          document.head.appendChild(script);
-        } else {
-          createPDFDocument();
-        }
-      };
-  
-      const createPDFDocument = () => {
-        try {
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-  
-          // Set up document
-          let yPos = 20;
-          const pageHeight = 270;
-          const margin = 20;
-  
-          // Helper to add text with wrapping
-          const addText = (text, x, y, options = {}) => {
-            const { bold = false, fontSize = 10, maxWidth = 170, indent = 0 } = options;
-  
-            doc.setFont('helvetica', bold ? 'bold' : 'normal');
-            doc.setFontSize(fontSize);
-  
-            const actualWidth = maxWidth - indent;
-            const lines = doc.splitTextToSize(text, actualWidth);
-            const height = lines.length * 5;
-  
-            // Page break check
-            if (y + height > pageHeight - 10) {
-              doc.addPage();
-              y = 20;
-            }
-  
-            doc.text(lines, x + indent, y);
-            return y + height;
-          };
-  
-          // Title
-          yPos = addText(session.title, margin, yPos, { bold: true, fontSize: 18 }) + 4;
-  
-          // Metadata
-          yPos = addText(`Created: ${new Date(session.createdAt).toLocaleDateString()}`, margin, yPos, { fontSize: 9 }) + 1;
-          yPos = addText(`Last Updated: ${new Date(session.lastUpdated).toLocaleDateString()}`, margin, yPos, { fontSize: 9 }) + 3;
-  
-          // Separator line
-          doc.line(margin, yPos, 190, yPos);
-          yPos += 10;
-  
-          // Chat History header
-          yPos = addText('Chat History', margin, yPos, { bold: true, fontSize: 14 }) + 4;
-  
-          // Section headings we want bold
-          const sectionHeadings = [
-            "What's Likely Happening:",
-            "Here's What You Can Do:",
-            "Watch for These Signs:",
-            "Suggestions for You:"
-            // "Disclaimer:" handled separately
-          ];
-  
-          const isSectionHeading = (t) =>
-            sectionHeadings.some(h => t.startsWith(h));
-  
-          // Process messages
-          session.messages.forEach((message) => {
-            const sender = message.type === 'user' ? 'User' : 'OrthoBot';
-            const headerBold = sender === 'OrthoBot';
-            yPos = addText(`${sender} (${message.timestamp}):`, margin, yPos, { bold: headerBold, fontSize: 11 }) + 2;
-  
-            if (message.type === 'bot') {
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = message.text;
-  
-              const processElement = (element) => {
-                if (element.nodeType === Node.TEXT_NODE) {
-                  let text = element.textContent.replace(/\s+/g, ' ').trim();
-                  if (!text) return;
-  
-                  // Skip disclaimer-like text here (we’ll handle it once later)
-                  const disclaimerLike = /^\s*(?:⚠️\s*)?Disclaimer:/i.test(text);
-                  if (disclaimerLike) return;
-  
-                  if (isSectionHeading(text)) {
-                    yPos = addText(text, margin, yPos, { bold: true, fontSize: 12 }) + 4;
-                  } else {
-                    yPos = addText(text, margin, yPos, { fontSize: 10 }) + 2;
-                  }
-                } else if (element.nodeType === Node.ELEMENT_NODE) {
-                  const tag = element.tagName.toLowerCase();
-  
-                  if (tag === 'ul') {
-                    element.querySelectorAll('li').forEach(li => {
-                      const t = li.textContent.replace(/\s+/g, ' ').trim();
-                      if (t) yPos = addText(`${t}`, margin, yPos, { indent: 8 }) + 2;
-                    });
-                    yPos += 2;
-                  } else {
-                    for (let child of element.childNodes) processElement(child);
-                  }
-                }
-              };
-  
-              // Process main content
-              for (let child of tempDiv.childNodes) {
-                processElement(child);
-              }
-  
-              // Handle Disclaimer once, clean
-              if (message.text.includes('Disclaimer:')) {
-                const cleanText = (s) =>
-                  (s || '').replace(/\s+/g, ' ').replace(/^\s*(?:⚠️\s*)?/, '').trim();
-  
-                let disclaimerBody = '';
-                const match = message.text.match(/Disclaimer:\s*([\s\S]*)$/i);
-                if (match && match[1]) {
-                  disclaimerBody = cleanText(match[1]);
-                }
-  
-                if (disclaimerBody) {
-                  yPos += 6; // spacing before disclaimer
-                  yPos = addText('Disclaimer:', margin, yPos, { bold: true, fontSize: 12 }) + 2;
-                  yPos = addText(disclaimerBody, margin, yPos, { fontSize: 10 }) + 2;
-                }
-              }
-  
-            } else {
-              // User message
-              yPos = addText(message.text, margin, yPos, { fontSize: 10 }) + 2;
-            }
-  
-            yPos += 3; // spacing between messages
-          });
-  
-          // Save PDF
-          const fileName = session.title.replace(/[<>:"/\\|?*]/g, '').trim();
-          doc.save(`${fileName}.pdf`);
-        } catch (error) {
-          console.error('PDF generation error:', error);
-          alert('Failed to generate PDF. Please try again.');
-        }
-      };
-  
-      generatePDF();
-    }
-    closeContextMenu();
-  };
-  
-  
+    closeContextMenu(); 
+  };  
 
   const handleDelete = (sessionId) => {
     setChatSessions(prev => prev.filter(session => session.id !== sessionId));
@@ -982,11 +837,10 @@ const Chat = () => {
   };
   
 
-  const handleCopyMessage = async (messageOrText) => {
+  const handleCopyMessage = async (message) => {
     try {
-      const isObject = typeof messageOrText === 'object' && messageOrText !== null;
-      const text = isObject ? messageOrText.text : messageOrText;
-      const isBotHtml = isObject && messageOrText.type === 'bot';
+      const text = message.text;
+      const isBotHtml = message.type === 'bot';
       const plain = isBotHtml ? convertHtmlToPlainText(text) : String(text);
 
       if (isBotHtml && window.ClipboardItem && navigator.clipboard?.write) {
@@ -998,22 +852,22 @@ const Chat = () => {
       } else {
         await navigator.clipboard.writeText(plain);
       }
-      setCopiedMessage(Date.now());
-      setTimeout(() => setCopiedMessage(null), 2000);
+      setCopiedMessageId(message.id);
+      setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (err) {
       console.error('Failed to copy message:', err);
       // Fallback for older browsers
-      const fallbackText = (typeof messageOrText === 'object' && messageOrText?.type === 'bot')
-        ? convertHtmlToPlainText(messageOrText.text)
-        : String(messageOrText);
+      const fallbackText = (message?.type === 'bot')
+        ? convertHtmlToPlainText(message.text)
+        : String(message.text);
       const textArea = document.createElement('textarea');
       textArea.value = fallbackText;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      setCopiedMessage(Date.now());
-      setTimeout(() => setCopiedMessage(null), 2000);
+      setCopiedMessageId(message.id);
+      setTimeout(() => setCopiedMessageId(null), 2000);
     }
   };
 
@@ -1195,13 +1049,6 @@ const Chat = () => {
           </button>
           <button 
             className="context-menu-item"
-            onClick={() => handleDownload(contextMenu.sessionId)}
-          >
-            <Download size={16} />
-            Download
-          </button>
-          <button 
-            className="context-menu-item"
             onClick={() => handleShare(contextMenu.sessionId)}
           >
             <Share size={16} />
@@ -1312,7 +1159,7 @@ const Chat = () => {
                 I'm here to help you with your orthopedic recovery journey.
               </p>
               <p className="welcome-description">
-                Ask questions using voice or text!
+                Ask questions using voice or text
               </p>
             </motion.div>
           ) : (
@@ -1353,10 +1200,10 @@ const Chat = () => {
                           className="user-copy-btn"
                           onClick={() => handleCopyMessage(message)}
                         >
-                          {copiedMessage && Date.now() - copiedMessage < 2000 ? (
+                          {copiedMessageId === message.id ? (
                             <Check size={14} className="copied-icon" />
                           ) : (
-                            <Copy size={14} />
+                            <Copy size={14} className="copy-icon" />
                           )}
                         </button>
                       </div>
@@ -1370,7 +1217,7 @@ const Chat = () => {
                           data-label="Copy"
                           onClick={() => handleCopyMessage(message)}
                         >
-                          {copiedMessage && Date.now() - copiedMessage < 2000 ? (
+                          {copiedMessageId === message.id ? (
                             <Check size={16} />
                           ) : (
                             <Copy size={16} />
@@ -1424,11 +1271,12 @@ const Chat = () => {
           <div className="input-container">
             <input
               type="text"
-              placeholder={placeholders[selectedLanguage]}
+              placeholder={isListening ? 'Listening...' : placeholders[selectedLanguage]}
               value={inputValue}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="chat-input"
+              className={`chat-input ${isListening ? 'listening-placeholder' : ''}`}
+              disabled={isListening}
             />
             <div className="input-actions">
               <select 
@@ -1467,7 +1315,7 @@ const Chat = () => {
             </div>
           </div>
           <p className="input-disclaimer">
-            OrthoBot AI can make mistakes. Please consult with healthcare professionals for medical advice.
+          OrthoBot AI can sometimes make mistakes. Always consult with a doctor for medical advice.
           </p>
         </div>
       </div>
