@@ -4,11 +4,38 @@ const ContactUs = () => {
   return (
     <div className="contact-us page-container">
       {/* Header Section with background image */}
-      <div className="contact-header">
-        <div className="header-content">
-          <h1>Contact Us</h1>
-          <h2>Get in Touch with Dr. Rameshwar Kumar</h2>
-        </div>
+      <div className="about-header">
+        <div className="header-content" 
+     style={{
+       display: "flex",
+       flexDirection: "column",
+       alignItems: "center",  
+       textAlign: "center",
+       gap: "10px",
+     }}
+>
+  <h1 
+    style={{
+      margin: "0",
+      fontSize: "40px",
+      fontWeight: "bold",
+      color: "white",
+    }}
+  >
+    Contact Us
+  </h1>
+
+  <h2 
+    style={{
+      marginTop: "5px",   
+      fontSize: "20px",
+      fontWeight: "normal",
+      color: "white ",
+    }}
+  >
+    Get in Touch with Dr. Rameshwar Kumar
+  </h2>
+</div>
       </div>
 
       {/* Content Section matching provided layout */}

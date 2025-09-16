@@ -5,11 +5,38 @@ const PrivacyPolicy = () => {
   return (
     <div className="privacy-page page-container">
       {/* Header Section with background image */}
-      <div className="privacy-header">
-        <div className="header-content">
-          <h1>Privacy Policy</h1>
-          <h2>We respect your privacy</h2>
-        </div>
+      <div className="about-header">
+        <div className="header-content" 
+     style={{
+       display: "flex",
+       flexDirection: "column",
+       alignItems: "center",  
+       textAlign: "center",
+       gap: "10px",
+     }}
+>
+  <h1 
+    style={{
+      margin: "0",
+      fontSize: "40px",
+      fontWeight: "bold",
+      color: "white",
+    }}
+  >
+  Privacy Policy
+  </h1>
+
+  <h2 
+    style={{
+      marginTop: "5px",   
+      fontSize: "20px",
+      fontWeight: "normal",
+      color: "white ",
+    }}
+  >
+  We respect your privacy
+  </h2>
+</div>
       </div>
 
       {/* Content Section */}

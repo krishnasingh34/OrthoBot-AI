@@ -55,10 +55,37 @@ const AboutUs = () => {
     <div className="about-us page-container">
       {/* Header Section */}
       <div className="about-header">
-        <div className="header-content">
-          <h1>About Us</h1>
-          <h2>Welcome to Dr. Rameshwar Kumar Clinic</h2>
-        </div>
+        <div className="header-content" 
+     style={{
+       display: "flex",
+       flexDirection: "column",
+       alignItems: "center",  
+       textAlign: "center",
+       gap: "10px",
+     }}
+>
+  <h1 
+    style={{
+      margin: "0",
+      fontSize: "40px",
+      fontWeight: "bold",
+      color: "white",
+    }}
+  >
+    About Us
+  </h1>
+
+  <h2 
+    style={{
+      marginTop: "5px",   
+      fontSize: "20px",
+      fontWeight: "normal",
+      color: "white ",
+    }}
+  >
+    Welcome to Dr. Rameshwar Kumar Clinic
+  </h2>
+</div>
       </div>
 
       {/* About Dr. Rameshwar Kumar Section */}
