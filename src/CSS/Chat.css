@@ -46,10 +46,48 @@
 .sidebar-header {
   padding: 0px 16px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   height: 60px;
+  position: relative;
 }
+
+.sidebar-header-controls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.hamburger-btn-sidebar {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.hamburger-btn-sidebar:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.close-btn-sidebar {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-btn-sidebar:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  background: #2d2d2d;
+}
+
 
 .sidebar-menu-btn {
   background: none;
@@ -71,9 +109,13 @@
   color: #888;
   font-size: 28px;
   cursor: pointer;
-  padding: 4px;
+  padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  z-index: 15;
 }
 
 .close-btn:hover {
