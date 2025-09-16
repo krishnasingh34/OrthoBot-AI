@@ -6,6 +6,7 @@ import {
   Plus,
   Search,
   Menu,
+  X,
   User,
   MoreVertical,
   Edit2,
@@ -21,6 +22,7 @@ import {
   Share
 } from 'lucide-react';
 import Navbar from './Navbar';
+import VoiceCallingInterface from './VoiceCallingInterface';
 import '../CSS/Chat.css';
 import profileLogo from '../assets/favicon.png';
 
@@ -45,6 +47,7 @@ const Chat = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [showVoiceCalling, setShowVoiceCalling] = useState(false);
   const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -232,57 +235,25 @@ const Chat = () => {
 
   // Initialize and toggle Speech Recognition
   const toggleVoice = () => {
-    try {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-        return;
+    // Show voice calling interface instead of direct recognition
+    setShowVoiceCalling(true);
+  };
+
+  // Handle starting conversation from voice calling interface
+  const handleStartConversation = (userMessage, detectedLanguage) => {
+    // Update the detected language if it's different from current selection
+    if (detectedLanguage === 'hindi' || detectedLanguage === 'hinglish') {
+      if (selectedLanguage !== 'hi') {
+        setSelectedLanguage('hi');
       }
-      if (isListening && recognitionRef.current) {
-        recognitionRef.current.stop();
-        return;
+    } else {
+      if (selectedLanguage !== 'en') {
+        setSelectedLanguage('en');
       }
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.lang = selectedLanguage === 'hi' ? 'hi-IN' : 'en-US';
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      recognition.continuous = false;
-      let finalTranscript = '';
-      setIsListening(true);
-      startedByVoiceRef.current = true;
-      recognition.onresult = (event) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interim += transcript;
-          }
-        }
-        const text = (finalTranscript + interim).trim();
-        setInputValue(text);
-      };
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-      recognition.onend = () => {
-        setIsListening(false);
-        // Auto-send if we started recognition and have text
-        if (startedByVoiceRef.current) {
-          startedByVoiceRef.current = false;
-          const toSend = (inputValue || '').trim();
-          if (toSend) {
-            handleSendMessage(toSend, 'voice');
-          }
-        }
-      };
-      recognition.start();
-    } catch (e) {
-      setIsListening(false);
-      console.warn('Voice start failed:', e);
     }
+    
+    // Start the conversation with the user's message
+    handleSendMessage(userMessage, 'voice');
   };
 
   // Utility: extract plain text from potentially HTML bot message
@@ -930,6 +901,13 @@ const Chat = () => {
 
   return (
     <div className="chat-page">
+      {/* Voice Calling Interface */}
+      <VoiceCallingInterface
+        isOpen={showVoiceCalling}
+        onClose={() => setShowVoiceCalling(false)}
+        selectedLanguage={selectedLanguage}
+      />
+      
       {/* Navbar */}
       <Navbar />
       
@@ -942,12 +920,14 @@ const Chat = () => {
       {/* Sidebar */}
       <div className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <button className="hamburger-btn-sidebar" onClick={toggleSidebar}>
-            <Menu size={20} />
-          </button>
-          <button className="close-btn" onClick={() => setSidebarOpen(false)}>
-            ×
-          </button>
+          <div className="sidebar-header-controls">
+            <button className="hamburger-btn-sidebar" onClick={toggleSidebar}>
+              <Menu size={20} />
+            </button>
+            <button className="close-btn-sidebar" onClick={toggleSidebar}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="sidebar-content">
