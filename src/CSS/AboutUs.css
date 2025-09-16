@@ -13,12 +13,40 @@
     color: white;
     padding: 110px 0 60px;
     text-align: center;
-    min-height: 45vh;
+    min-height: 48vh;
     width: 100vw;
     margin-left: 50%;
     transform: translateX(-50%);
     left: 0;
     right: 0;
+    margin-top: -82.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Contact Us Header */
+  .contact-us .about-header {
+    background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url('../assets/contact-us.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Privacy Policy Header */
+  .privacy-page .about-header {
+    background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url('../assets/privacy-policy.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Terms & Conditions Header */
+  .terms-page .about-header {
+    background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url('../assets/terms-conditions.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
   
   .header-content h1 {
@@ -185,7 +213,7 @@
   
   .achievements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
   }
   
@@ -226,7 +254,7 @@
   @media (max-width: 768px) {
     .about-content {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 0rem;
       text-align: left;
     }
     

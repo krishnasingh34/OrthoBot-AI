@@ -18,6 +18,29 @@
   transform: translateX(-50%);
   left: 0;
   right: 0;
+  margin-top: -82.5px;
+}
+
+/* About Header for Terms & Conditions */
+.terms-page .about-header {
+  position: relative;
+  background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)), url('../assets/terms-conditions.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  padding: 110px 0 60px;
+  text-align: center;
+  min-height: 48vh;
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin-top: -82.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .terms-header .header-content h1 {
