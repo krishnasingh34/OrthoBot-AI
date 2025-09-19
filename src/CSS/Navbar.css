@@ -245,10 +245,10 @@ a:active, button:active, [role="button"]:active, .nav-link:active {
 
 .hamburger span {
   display: block;
-  width: 25px;
+  width: 33px;
   height: 3px;
   background: #FFFFFF;
-  margin: 5px 0;
+  margin: 2px 0;
   border-radius: 2px;
   transition: all 0.3s ease;
   transform-origin: center;
