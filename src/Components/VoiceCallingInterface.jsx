@@ -12,8 +12,11 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
   const [conversationActive, setConversationActive] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const currentSessionIdRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
+  const azureAudioRef = useRef(null);
+  const azureAudioUrlRef = useRef(null);
   const conversationHistoryRef = useRef([]);
   const timeoutsRef = useRef([]);
   const isShuttingDownRef = useRef(false);
@@ -85,6 +88,7 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
       if (response.ok) {
         const data = await response.json();
         setCurrentSessionId(data.sessionId);
+        currentSessionIdRef.current = data.sessionId;
         console.log('Voice session started:', data.sessionId);
         return data.sessionId;
       } else {
@@ -138,12 +142,17 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
           userId: 'voice-call-user',
           useConversationalAgent: true,
           source: 'voice',
-          sessionId: currentSessionId
+          sessionId: currentSessionIdRef.current || currentSessionId
         })
       });
 
       if (response.ok) {
         const data = await response.json();
+        // Sync sessionId from backend (in case server ensured/created a different one)
+        if (data.sessionId && data.sessionId !== currentSessionIdRef.current) {
+          setCurrentSessionId(data.sessionId);
+          currentSessionIdRef.current = data.sessionId;
+        }
         const botResponse = data.response || data.answer || 'Sorry, I could not process your request.';
         
         // Store in conversation history
@@ -170,33 +179,109 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
 
   // Speak text using TTS
   const speakText = async (text, language) => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    const useAzure = Boolean(import.meta.env.VITE_USE_AZURE_TTS);
+    const azureVoice = import.meta.env.VITE_AZURE_VOICE || (language === 'hindi' || language === 'hinglish' ? 'hi-IN-SwaraNeural' : 'en-US-JennyNeural');
+
+    // Try Azure TTS first if enabled
+    if (useAzure) {
+      try {
+        setIsBotSpeaking(true);
+        const tokenResp = await fetch(`${backendUrl}/api/azure/tts/token`);
+        if (!tokenResp.ok) {
+          let errDetail = '';
+          try {
+            const errJson = await tokenResp.json();
+            errDetail = JSON.stringify(errJson);
+          } catch {
+            try { errDetail = await tokenResp.text(); } catch {}
+          }
+          throw new Error(`Failed to get Azure token [${tokenResp.status}]: ${errDetail}`);
+        }
+        const { token, region } = await tokenResp.json();
+
+        const xmlLang = azureVoice.includes('-') ? azureVoice.split('-').slice(0, 2).join('-') : 'en-US';
+        const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const ssml = `<?xml version="1.0" encoding="UTF-8"?>
+<speak version="1.0" xml:lang="${xmlLang}" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts">
+  <voice name="${azureVoice}">
+    <mstts:express-as style="chat">${escaped}</mstts:express-as>
+  </voice>
+</speak>`;
+
+        const ttsResp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3'
+          },
+          body: ssml
+        });
+
+        if (!ttsResp.ok) {
+          let errDetail = '';
+          try {
+            const errJson = await ttsResp.json();
+            errDetail = JSON.stringify(errJson);
+          } catch {
+            try { errDetail = await ttsResp.text(); } catch {}
+          }
+          throw new Error(`Azure TTS synthesis failed [${ttsResp.status}]: ${errDetail}`);
+        }
+        const audioBlob = await ttsResp.blob();
+        const url = URL.createObjectURL(audioBlob);
+        // Stop any previous Azure audio immediately before starting new one
+        if (azureAudioRef.current) {
+          try { azureAudioRef.current.pause(); } catch {}
+        }
+        if (azureAudioUrlRef.current) {
+          try { URL.revokeObjectURL(azureAudioUrlRef.current); } catch {}
+        }
+        azureAudioUrlRef.current = url;
+        const audio = new Audio(url);
+        azureAudioRef.current = audio;
+
+        await new Promise((resolve) => {
+          audio.onended = () => {
+            setIsBotSpeaking(false);
+            try { URL.revokeObjectURL(url); } catch {}
+            if (azureAudioRef.current === audio) {
+              azureAudioRef.current = null;
+              azureAudioUrlRef.current = null;
+            }
+            resolve();
+          };
+          audio.onerror = () => {
+            setIsBotSpeaking(false);
+            try { URL.revokeObjectURL(url); } catch {}
+            if (azureAudioRef.current === audio) {
+              azureAudioRef.current = null;
+              azureAudioUrlRef.current = null;
+            }
+            resolve();
+          };
+          audio.play();
+        });
+        return;
+      } catch (e) {
+        console.warn('Azure TTS failed, falling back to browser TTS:', e);
+      }
+    }
+
+    // Fallback to browser speechSynthesis
     if (!window.speechSynthesis) return;
-    
     return new Promise((resolve) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      
-      // Set language for TTS
       if (language === 'hindi' || language === 'hinglish') {
         utterance.lang = 'hi-IN';
       } else {
         utterance.lang = 'en-US';
       }
-      
-      utterance.onstart = () => {
-        setIsBotSpeaking(true);
-      };
-      
-      utterance.onend = () => {
-        setIsBotSpeaking(false);
-        resolve();
-      };
-      
-      utterance.onerror = () => {
-        setIsBotSpeaking(false);
-        resolve();
-      };
-      
+      utterance.onstart = () => setIsBotSpeaking(true);
+      utterance.onend = () => { setIsBotSpeaking(false); resolve(); };
+      utterance.onerror = () => { setIsBotSpeaking(false); resolve(); };
       speechSynthesisRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     });
@@ -386,6 +471,15 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
         window.speechSynthesis.cancel();
         speechSynthesisRef.current = null;
       }
+      // Stop any ongoing Azure audio playback
+      if (azureAudioRef.current) {
+        try { azureAudioRef.current.pause(); } catch {}
+        azureAudioRef.current = null;
+      }
+      if (azureAudioUrlRef.current) {
+        try { URL.revokeObjectURL(azureAudioUrlRef.current); } catch {}
+        azureAudioUrlRef.current = null;
+      }
       
       // Simulate connection delay
       addTimeout(async () => {
@@ -510,6 +604,15 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
     // Stop speech synthesis immediately
     window.speechSynthesis.cancel();
     speechSynthesisRef.current = null;
+    // Stop Azure audio immediately
+    if (azureAudioRef.current) {
+      try { azureAudioRef.current.pause(); } catch {}
+      azureAudioRef.current = null;
+    }
+    if (azureAudioUrlRef.current) {
+      try { URL.revokeObjectURL(azureAudioUrlRef.current); } catch {}
+      azureAudioUrlRef.current = null;
+    }
 
     // Clear conversation history
     conversationHistoryRef.current = [];
