@@ -50,6 +50,7 @@ const Chat = () => {
   const [showVoiceCalling, setShowVoiceCalling] = useState(false);
   const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
   const recognitionRef = useRef(null);
   const startedByVoiceRef = useRef(false);
   const currentUtteranceRef = useRef(null);
@@ -197,6 +198,22 @@ const Chat = () => {
     }
   }, [messages]);
 
+  // Auto-resize textarea when inputValue changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 200);
+      textareaRef.current.style.height = Math.max(newHeight, 40) + 'px';
+      
+      // Smooth scroll to bottom if content exceeds max height
+      if (textareaRef.current.scrollHeight > 200) {
+        setTimeout(() => {
+          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+        }, 0);
+      }
+    }
+  }, [inputValue]);
+
   // Speak bot responses via TTS
   useEffect(() => {
     if (!messages || messages.length === 0) return;
@@ -300,6 +317,33 @@ const Chat = () => {
       setIsSpeaking(false);
       setSpeakingMessageId(null);
     }
+  };
+
+  // Handle saving voice conversation to chat history (ChatGPT style)
+  const handleSaveVoiceHistory = (voiceMessages, chatTitle) => {
+    if (!voiceMessages || voiceMessages.length === 0) return;
+    
+    console.log('Saving voice conversation to chat history:', chatTitle, voiceMessages);
+    
+    // Create new chat session for voice conversation
+    const newSessionId = Date.now().toString();
+    const newSession = {
+      id: newSessionId,
+      title: chatTitle,
+      messages: voiceMessages,
+      lastUpdated: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      isVoiceCall: true // Mark as voice call session
+    };
+    
+    // Add to chat sessions at the top (most recent)
+    setChatSessions(prev => [newSession, ...prev]);
+    
+    // Save to localStorage
+    const updatedSessions = [newSession, ...chatSessions];
+    localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
+    
+    console.log('Voice conversation saved to chat history successfully');
   };
 
 
@@ -557,9 +601,15 @@ const Chat = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      handleSendMessage();
+      if (e.shiftKey) {
+        // Shift+Enter: Allow new line (don't prevent default)
+        return;
+      } else {
+        // Enter: Send message
+        e.preventDefault();
+        e.stopPropagation();
+        handleSendMessage();
+      }
     }
   };
 
@@ -906,6 +956,7 @@ const Chat = () => {
         isOpen={showVoiceCalling}
         onClose={() => setShowVoiceCalling(false)}
         selectedLanguage={selectedLanguage}
+        onSaveVoiceHistory={handleSaveVoiceHistory}
       />
       
       {/* Navbar */}
@@ -970,7 +1021,10 @@ const Chat = () => {
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
-                        <span className="session-title">{session.title}</span>
+                        <span className="session-title">
+                          {session.isVoiceCall && <Mic size={14} className="voice-call-icon" />}
+                          {session.title}
+                        </span>
                       )}
                       {session.pinned && <Pin size={12} className="pin-icon" />}
                       <button
@@ -1249,14 +1303,35 @@ const Chat = () => {
 
         <div className="chat-input-area">
           <div className="input-container">
-            <input
-              type="text"
+            <textarea
+              ref={textareaRef}
               placeholder={isListening ? 'Listening...' : placeholders[selectedLanguage]}
               value={inputValue}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               className={`chat-input ${isListening ? 'listening-placeholder' : ''}`}
               disabled={isListening}
+              rows={1}
+              style={{
+                minHeight: '40px',
+                maxHeight: '200px',
+                resize: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}
+              onInput={(e) => {
+                // Auto-resize textarea
+                e.target.style.height = 'auto';
+                const newHeight = Math.min(e.target.scrollHeight, 200);
+                e.target.style.height = Math.max(newHeight, 40) + 'px';
+                
+                // Smooth scroll to bottom if content exceeds max height
+                if (e.target.scrollHeight > 200) {
+                  setTimeout(() => {
+                    e.target.scrollTop = e.target.scrollHeight;
+                  }, 0);
+                }
+              }}
             />
             <div className="input-actions">
               <select 

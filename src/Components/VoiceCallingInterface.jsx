@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Phone, X } from 'lucide-react';
 import '../CSS/VoiceCallingInterface.css';
 
-const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => {
+const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en', onSaveVoiceHistory }) => {
   const [isListening, setIsListening] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState('english');
   const [welcomeMessage, setWelcomeMessage] = useState('');
@@ -573,13 +573,329 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en' }) => 
     };
   }, []);
 
+  // Save voice conversation to chat history
+  const saveVoiceConversationToHistory = async (sessionId) => {
+    if (!sessionId || !onSaveVoiceHistory) return;
+    
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      const response = await fetch(`${backendUrl}/api/voice/session/history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Voice session history retrieved:', data);
+        
+        // Convert voice conversation to chat format
+        if (data.conversationHistory && data.conversationHistory.length > 0) {
+          const chatMessages = data.conversationHistory.map((msg, index) => ({
+            id: Date.now() + index,
+            type: msg.role === 'user' ? 'user' : 'bot',
+            text: msg.content,
+            timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+          
+          // Generate chat title based on first user message or topic
+          const firstUserMessage = data.conversationHistory.find(msg => msg.role === 'user');
+          const chatTitle = firstUserMessage ? 
+            extractVoiceCallIntent(firstUserMessage.content) : 
+            'Voice Call Session';
+          
+          // Save to chat history via callback
+          onSaveVoiceHistory(chatMessages, chatTitle);
+          console.log('Voice conversation saved to chat history:', chatTitle);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving voice conversation to history:', error);
+    }
+  };
+
+  // Extract intent from voice call for chat title
+  const extractVoiceCallIntent = (text) => {
+    const cleanText = text.toLowerCase().trim();
+    console.log('🎯 Analyzing text for intent:', cleanText);
+    
+    // Intent patterns for meaningful chat titles (without "Voice Call:" prefix)
+    const intentPatterns = {
+      'Post-operative Care': ['post-operative', 'post operative', 'after surgery', 'post surgery', 'operation ke baad', 'surgery ke baad', 'सर्जरी के बाद', 'ऑपरेशन के बाद', 'surgery baad', 'operation baad'],
+      'Knee Recovery': ['knee', 'knee pain', 'knee surgery', 'knee injury', 'घुटना', 'घुटने में दर्द', 'ghutna', 'knee ka dard'],
+      'Back Pain Relief': ['back pain', 'back injury', 'back surgery', 'spine', 'कमर दर्द', 'पीठ दर्द', 'kamar dard', 'back mein dard'],
+      'Shoulder Rehabilitation': ['shoulder', 'shoulder pain', 'shoulder surgery', 'shoulder injury', 'कंधा', 'कंधे में दर्द', 'kandha'],
+      'Hip Recovery': ['hip', 'hip replacement', 'hip surgery', 'hip pain', 'कूल्हा', 'कूल्हे में दर्द', 'kulha'],
+      'Exercise & Therapy': ['exercise', 'workout', 'physical therapy', 'stretching', 'व्यायाम', 'एक्सरसाइज', 'physio'],
+      'Recovery Timeline': ['recovery time', 'how long', 'timeline', 'healing time', 'कितना समय', 'कब तक', 'kitna samay'],
+      'Pain Management': ['pain relief', 'manage pain', 'reduce pain', 'pain medication', 'दर्द कम करना', 'dard kam karna'],
+      'Mobility Issues': ['mobility', 'movement', 'range of motion', 'flexibility', 'चलने में', 'हिलने में', 'chalne mein'],
+      'Wound Care': ['wound', 'incision', 'stitches', 'healing', 'घाव', 'टांके', 'ghav', 'tanke'],
+      'Return to Activities': ['return to work', 'return to sport', 'normal activities', 'काम पर वापस', 'kaam par wapas'],
+      'Diabetes Management': ['diabetes', 'sugar', 'blood sugar', 'glucose', 'insulin', 'शुगर', 'मधुमेह', 'डायबिटीज'],
+      'Blood Pressure Issues': ['blood pressure', 'bp high', 'bp low', 'hypertension', 'ब्लड प्रेशर', 'हाई बीपी'],
+      'Heart Problems': ['heart', 'chest pain', 'heart attack', 'cardiac', 'दिल', 'सीने में दर्द', 'heart attack'],
+      'Breathing Issues': ['breathing', 'asthma', 'cough', 'lungs', 'सांस', 'खांसी', 'दम घुटना', 'saas'],
+      'Mental Health': ['depression', 'anxiety', 'stress', 'तनाव', 'चिंता', 'डिप्रेशन', 'tanav'],
+      'General Health': ['health', 'wellness', 'checkup', 'स्वास्थ्य', 'सेहत', 'swasthya']
+    };
+    
+    // Find matching intent for medical topics
+    for (const [intent, keywords] of Object.entries(intentPatterns)) {
+      const matchedKeyword = keywords.find(keyword => cleanText.includes(keyword));
+      if (matchedKeyword) {
+        console.log('✅ Found medical intent match:', intent, 'for keyword:', matchedKeyword);
+        return intent;
+      }
+    }
+    console.log('❌ No specific medical intent matches found');
+    
+    // Fallback: extract key medical terms and create meaningful titles
+    const medicalTerms = {
+      'surgery': 'Surgery Consultation',
+      'सर्जरी': 'Surgery Consultation',
+      'ऑपरेशन': 'Surgery Consultation',
+      'recovery': 'Recovery Questions', 
+      'pain': 'Pain Relief',
+      'therapy': 'Therapy Guidance',
+      'exercise': 'Exercise Questions',
+      'treatment': 'Treatment Discussion',
+      'injury': 'Injury Consultation',
+      'healing': 'Healing Process',
+      'medicine': 'Medication Questions',
+      'doctor': 'Medical Consultation',
+      'hospital': 'Hospital Related',
+      'दर्द': 'Pain Relief',
+      'इलाज': 'Treatment Discussion',
+      'दवा': 'Medication Questions',
+      'डॉक्टर': 'Medical Consultation'
+    };
+    
+    for (const [term, title] of Object.entries(medicalTerms)) {
+      if (cleanText.includes(term)) {
+        console.log('✅ Found medical term match:', title, 'for term:', term);
+        return title;
+      }
+    }
+    console.log('❌ No medical term matches found');
+    // Check for non-medical/off-topic conversations
+    const offTopicPatterns = {
+      'Weather Discussion': [
+        'weather', 'rain', 'hot', 'cold', 'temperature',
+        'मौसम', 'बारिश', 'गर्मी', 'ठंड', 'mausam'
+      ],
+    
+      'Technology Talk': [
+        'computer', 'phone', 'internet', 'software', 'app', 'website',
+        'कंप्यूटर', 'फोन', 'इंटरनेट'
+      ],
+    
+      'Food & Cooking': [
+        'food', 'cooking', 'recipe', 'eat', 'meal',
+        'खाना', 'खाना बनाना', 'रेसिपी', 'khana'
+      ],
+    
+      'Sports Discussion': [
+        'cricket', 'football', 'sports', 'match', 'game',
+        'खेल', 'मैच', 'क्रिकेट', 'khel'
+      ],
+    
+      'Celebrity Discussion': [
+        'celebrity', 'actor', 'actress', 'singer', 'star', 'bollywood', 'hollywood',
+        'film', 'movie',
+        'सेलिब्रिटी', 'अभिनेता', 'अभिनेत्री', 'गायक', 'स्टार', 'बॉलीवुड', 'हॉलीवुड', 'फिल्म',
+        'famous', 'popular', 'superstar', 'hero', 'heroine', 'artist', 'performer',
+        'प्रसिद्ध', 'मशहूर', 'सुपरस्टार', 'हीरो', 'हीरोइन', 'कलाकार',
+        'khan', 'kumar', 'singh', 'sharma', 'kapoor', 'bhatt', 'chopra', 'kaif',
+        'खान', 'कुमार', 'सिंह', 'शर्मा', 'कपूर', 'भट्ट', 'चोपड़ा', 'कैफ',
+        'acting', 'singing', 'dancing', 'performance', 'concert', 'album', 'song',
+        'अभिनय', 'गायन', 'नृत्य', 'प्रदर्शन', 'कॉन्सर्ट', 'एल्बम', 'गाना'
+      ],
+    
+      'Entertainment': [
+        'music', 'song', 'tv', 'show', 'series',
+        'गाना', 'संगीत', 'टीवी', 'शो'
+      ],
+    
+      'Travel & Places': [
+        'travel', 'trip', 'place', 'city', 'country', 'flight', 'train', 'ticket', 'hotel',
+        'यात्रा', 'सफर', 'जगह', 'पासपोर्ट', 'होटल', 'विसा', 'yatra', 'safar'
+      ],
+    
+      'Education & Learning': [
+        'study', 'school', 'college', 'education', 'learn',
+        'पढ़ाई', 'स्कूल', 'कॉलेज', 'padhai'
+      ],
+    
+      'Work & Career': [
+        'job', 'work', 'office', 'career', 'business',
+        'काम', 'नौकरी', 'ऑफिस', 'kaam', 'naukri'
+      ],
+    
+      'Family & Relationships': [
+        'family', 'friend', 'relationship', 'marriage',
+        'परिवार', 'दोस्त', 'शादी', 'parivar'
+      ],
+    
+      'Shopping & Money': [
+        'shopping', 'buy', 'sell', 'money', 'price',
+        'amazon', 'flipkart', 'myntra', 'nike', 'adidas', 'brand',
+        'खरीदारी', 'पैसा', 'कीमत', 'kharidari', 'ब्रांड', 'ऑनलाइन शॉपिंग'
+      ],
+    
+      'News & Current Events': [
+        'news', 'politics', 'government', 'election',
+        'समाचार', 'राजनीति', 'सरकार', 'samachar'
+      ],
+    
+      'Hobbies & Interests': [
+        'hobby', 'interest', 'reading', 'painting',
+        'शौक', 'रुचि', 'पढ़ना', 'shauk'
+      ],
+    
+      'General Chat': [
+        'hello', 'hi', 'how are you', 'good morning', 'good evening', 'how are you doing',
+        'what\'s up', 'hey', 'greetings', 'nice to meet you', 'pleased to meet you',
+        'नमस्ते', 'हैलो', 'कैसे हैं', 'क्या हाल है', 'कैसे हो', 'आप कैसे हैं'
+      ],
+    
+      // 🆕 Extra categories
+    
+      'Religion & Spirituality': [
+        'god', 'bhagwan', 'allah', 'temple', 'church', 'mandir', 'masjid',
+        'धर्म', 'भगवान', 'मंदिर', 'मस्जिद', 'धार्मिक', 'spiritual', 'prayer'
+      ],
+    
+      'Politics & Leaders': [
+        'prime minister', 'president', 'minister', 'bjp', 'congress', 'vote',
+        'मोदी', 'योगी', 'राजनीतिक', 'election', 'government policy'
+      ],
+    
+      'Finance & Crypto': [
+        'bitcoin', 'crypto', 'stock', 'trading', 'investment', 'shares',
+        'मुद्रा', 'शेयर', 'निवेश', 'पैसा कमाना', 'finance', 'bank loan'
+      ],
+    
+      'Movies & OTT': [
+        'netflix', 'amazon prime', 'zee5', 'hotstar', 'movie review', 'trailer',
+        'फिल्म देखना', 'सीरीज', 'वेब सीरीज', 'ओटीटी'
+      ],
+    
+      'Gaming': [
+        'pubg', 'free fire', 'minecraft', 'valorant', 'bgmi', 'gameplay',
+        'खेलना', 'गेमिंग', 'video game'
+      ],
+    
+      'Fashion & Lifestyle': [
+        'clothes', 'fashion', 'style', 'makeup', 'shoes', 'trend',
+        'कपड़े', 'फैशन', 'स्टाइल', 'सौंदर्य प्रसाधन', 'जूते'
+      ],
+    
+      'Astrology & Superstition': [
+        'zodiac', 'rashifal', 'kundli', 'horoscope', 'astrology', 'vastu',
+        'ज्योतिष', 'राशि', 'कुंडली', 'भाग्य'
+      ],
+    
+      'Random Fun / Jokes': [
+        'joke', 'funny', 'meme', 'हंसी', 'चुटकुला', 'मजेदार'
+      ],
+    
+      // 🆕 From my extended list
+      'Love & Dating': [
+        'love', 'girlfriend', 'boyfriend', 'date', 'romance', 'crush', 'kiss',
+        'प्यार', 'प्रेम', 'गर्लफ्रेंड', 'बॉयफ्रेंड', 'रोमांस', 'डेट'
+      ],
+    
+      'Festivals & Culture': [
+        'diwali', 'holi', 'eid', 'christmas', 'festival', 'celebration',
+        'त्योहार', 'होली', 'दीवाली', 'ईद', 'क्रिसमस', 'उत्सव'
+      ],
+    
+      'Animals & Pets': [
+        'dog', 'cat', 'pet', 'animal', 'puppy', 'kitten', 'bird',
+        'कुत्ता', 'बिल्ली', 'पशु', 'पालतू'
+      ],
+    
+      'Vehicles & Automobiles': [
+        'car', 'bike', 'motorcycle', 'bus', 'truck', 'engine', 'mileage',
+        'कार', 'बाइक', 'वाहन', 'गाड़ी', 'मोटर'
+      ],
+    
+      'Science & Space': [
+        'space', 'nasa', 'moon', 'mars', 'rocket', 'planet', 'alien',
+        'अंतरिक्ष', 'चाँद', 'मंगल', 'ग्रह', 'रॉकेट'
+      ],
+    
+      'History & Kings': [
+        'history', 'freedom', 'independence', 'ancient', 'king', 'queen',
+        'इतिहास', 'स्वतंत्रता', 'राजा', 'रानी', 'पुराना जमाना'
+      ],
+    
+      'Home & Daily Life': [
+        'house', 'cleaning', 'laundry', 'kitchen', 'furniture', 'rent',
+        'घर', 'सफाई', 'कपड़े धोना', 'फर्नीचर', 'किराया'
+      ],
+    
+      'Math & Puzzles': [
+        'math', 'algebra', 'geometry', 'puzzle', 'riddle',
+        'गणित', 'पहेली', 'समस्या', 'गणना'
+      ],
+    
+      'Programming & Coding': [
+        'java', 'python', 'react', 'code', 'bug', 'software error',
+        'कोडिंग', 'प्रोग्रामिंग', 'सॉफ्टवेयर'
+      ]
+    };
+    
+
+    // Check for off-topic conversations - return same title for all non-medical topics
+    for (const [intent, keywords] of Object.entries(offTopicPatterns)) {
+      const matchedKeyword = keywords.find(keyword => cleanText.includes(keyword));
+      if (matchedKeyword) {
+        console.log('✅ Found off-topic match:', intent, 'for keyword:', matchedKeyword);
+        return 'General Conversations'; // Same title for all non-medical conversations
+      }
+    }
+    console.log('❌ No off-topic matches found');
+
+    // Check for general conversation topics - all return same title
+    if (cleanText.includes('help') || cleanText.includes('मदद') || cleanText.includes('madad')) {
+      return 'General Conversations';
+    }
+    
+    if (cleanText.includes('question') || cleanText.includes('सवाल') || cleanText.includes('sawal')) {
+      return 'General Conversations';
+    }
+
+    // Check if it contains any personal pronouns or casual conversation
+    const casualConversation = ['i am', 'i was', 'i will', 'my name', 'tell me about', 'what is', 'how to', 
+                               'मैं हूं', 'मेरा नाम', 'बताइए', 'क्या है', 'कैसे करें', 'main hun'];
+    
+    if (casualConversation.some(phrase => cleanText.includes(phrase))) {
+      return 'General Conversations';
+    }
+    
+    // Final fallback - for unclear conversations that don't match any category
+    console.log('🔄 Using final fallback: General Conversations');
+    return 'General Conversations';
+  };
+
   // Handle end call
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
     console.log('Ending call - stopping all audio and recognition');
     isShuttingDownRef.current = true;
 
     // Stop any scheduled restarts/timeouts immediately
     clearAllTimeouts();
+
+    // Save voice conversation to chat history before ending session
+    if (currentSessionId) {
+      await saveVoiceConversationToHistory(currentSessionId);
+    }
 
     // Stop all audio and conversation immediately
     setConversationActive(false);
