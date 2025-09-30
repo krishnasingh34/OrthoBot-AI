@@ -5,7 +5,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './Components/Navbar';
 import Hero from './Components/Hero';
 import Features from './Components/Features';
-import HowItWorks from './Components/HowItWorks';
 import ChatDemo from './Components/ChatDemo';
 import FAQ from './Components/FAQ';
 import Footer from './Components/Footer';
@@ -24,7 +23,6 @@ const HomePage = ({ scrollToTop }) => {
       <main className="main-content">
         <Hero />
         <Features />
-        <HowItWorks />
         <ChatDemo />
         <FAQ />
       </main>

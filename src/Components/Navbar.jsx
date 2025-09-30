@@ -20,7 +20,6 @@ const Navbar = ({ scrollToTop }) => {
     const baseLinks = [
       { name: "Home", href: "#home", id: "home", path: "/" },
       { name: "Features", href: "#features", id: "features", path: "/" },
-      { name: "How it Works", href: "#how-it-works", id: "how-it-works", path: "/" },
       { name: "FAQs", href: "#faqs", id: "faqs", path: "/" },
       { name: "About Us", href: "/about", id: "about", path: "/about" },
       { name: "Contact Us", href: "/contact", id: "contact", path: "/contact" },

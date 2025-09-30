@@ -1,19 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { useClerk, useUser } from '@clerk/clerk-react';
 import '../CSS/Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const navigate = useNavigate();
-  // const { isSignedIn } = useUser();
-  // const { openSignIn } = useClerk();
 
   const handleNavigation = (path) => {
     // Navigate first
     navigate(path);
     // Smooth scroll to top after route change
-    if (path === '/' || path === '/about' || path === '/contact' || path === '/privacy-policy' || path === '/terms-conditions') {
+    if (path === '/' || path === '/about' || path === '/contact' || path === '/privacy-policy' || path === '/terms-conditions' || path === '/auth') {
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
@@ -21,59 +18,8 @@ const Footer = () => {
   };
 
   const handleFooterLoginClick = () => {
-    if (!isSignedIn) {
-      // Scroll to top smoothly, then open Clerk sign-in modal once at top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      let modalOpened = false;
-
-      const tryOpenModal = () => {
-        if (!modalOpened && (window.scrollY === 0 || window.pageYOffset === 0)) {
-          modalOpened = true;
-          window.removeEventListener('scroll', tryOpenModal, { passive: true });
-          openSignIn({});
-        }
-      };
-
-      // Listen for scroll to reach the top
-      window.addEventListener('scroll', tryOpenModal, { passive: true });
-
-      // Fallback in case the browser doesn't emit final scroll event
-      setTimeout(() => {
-        if (!modalOpened) {
-          modalOpened = true;
-          window.removeEventListener('scroll', tryOpenModal, { passive: true });
-          openSignIn({});
-        }
-      }, 900);
-      return;
-    }
-
-    // If already signed in → go to Home, then smoothly scroll all the way to the very top
-    navigate('/');
-    setTimeout(() => {
-      // Initiate smooth scroll to absolute top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      const onScrollCheckTop = () => {
-        if (window.scrollY === 0 || window.pageYOffset === 0) {
-          window.removeEventListener('scroll', onScrollCheckTop, { passive: true });
-        }
-      };
-
-      // Keep listening until we reach the very top
-      window.addEventListener('scroll', onScrollCheckTop, { passive: true });
-
-      // Fallback: try once more shortly after in case route transition repositioned
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 350);
-
-      // Cleanup the listener after a reasonable window
-      setTimeout(() => {
-        window.removeEventListener('scroll', onScrollCheckTop, { passive: true });
-      }, 1200);
-    }, 200);
+    // Simply navigate to the auth page
+    handleNavigation('/auth');
   };
 
   return (

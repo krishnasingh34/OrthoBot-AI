@@ -1,9 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import '../CSS/Hero.css';
 import logoImage from '../assets/Dr_Logo.png';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
+  const handleStartChat = () => {
+    navigate('/chat');
+  };
+
+
   return (
     <section className="hero" id="home">
       <div className="hero-container">
@@ -25,20 +33,12 @@ const Hero = () => {
           <div className="hero-buttons">
             <motion.button 
               className="btn-primary"
+              onClick={handleStartChat}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
               Start Chat
-            </motion.button>
-            
-            <motion.button 
-              className="btn-secondary"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              Learn More
             </motion.button>
           </div>
         </motion.div>
