@@ -929,6 +929,20 @@ const Chat = () => {
     const session = chatSessions.find(s => s.id === sessionId);
     if (session) {
       try {
+        // First, load the actual messages from MongoDB
+        const chatResult = await chatHistoryService.current.getChatConversation(sessionId);
+        if (!chatResult.success || !chatResult.chat) {
+          throw new Error('Failed to load chat messages');
+        }
+
+        // Convert MongoDB messages to the format expected by the share API
+        const messagesToShare = chatResult.chat.messages.map(msg => ({
+          id: msg.messageId || Date.now() + Math.random(),
+          type: msg.role === 'user' ? 'user' : 'bot',
+          text: msg.content,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }));
+
         const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
         
         const response = await fetch(`${backendUrl}/api/share/chat`, {
@@ -939,7 +953,7 @@ const Chat = () => {
           body: JSON.stringify({
             shareType: 'full_chat',
             title: session.title,
-            messages: session.messages
+            messages: messagesToShare
           })
         });
 
