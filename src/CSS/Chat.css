@@ -1457,3 +1457,112 @@ button, input, select, textarea {
     padding: 12px 16px;
   }
 }
+
+/* Login Prompt Section */
+.login-prompt-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-prompt {
+  text-align: center;
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 280px;
+}
+
+.login-prompt-icon {
+  color: #9b51e0;
+  margin-bottom: 16px;
+}
+
+.login-prompt h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.login-prompt p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.login-prompt-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.login-prompt-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.login-prompt-btn:active {
+  transform: translateY(0);
+}
+
+/* Clickable Login Button */
+.user-profile.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-profile.clickable:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.user-profile.clickable:active {
+  transform: translateY(0);
+}
+
+/* Sidebar Logout Button */
+.sidebar-logout-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.sidebar-logout-btn:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  transform: scale(1.1);
+}
+
+.sidebar-logout-btn:active {
+  transform: scale(0.95);
+}
+
+/* Update user-profile to be flex for proper layout */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}

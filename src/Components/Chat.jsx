@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Send, 
   Mic, 
@@ -19,20 +20,26 @@ import {
   Square,
   Volume2,
   VolumeX,
-  Share
+  Share,
+  LogOut
 } from 'lucide-react';
 import Navbar from './Navbar';
 import VoiceCallingInterface from './VoiceCallingInterface';
+import ChatHistoryService from '../services/chatHistoryService';
+import { useAuth } from '../contexts/AuthContext';
 import '../CSS/Chat.css';
 import profileLogo from '../assets/favicon.png';
 
 const Chat = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, authService, logout } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messages, setMessages] = useState([]);
   const [isWelcomeScreen, setIsWelcomeScreen] = useState(true);
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [currentChatId, setCurrentChatId] = useState(null); // MongoDB chat ID
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState({ show: false, sessionId: null, x: 0, y: 0 });
   const [editingSession, setEditingSession] = useState(null);
@@ -56,6 +63,7 @@ const Chat = () => {
   const currentUtteranceRef = useRef(null);
   const voicesReadyRef = useRef(false);
   const shouldAutoSpeakRef = useRef(false);
+  const chatHistoryService = useRef(new ChatHistoryService(authService));
 
   // Ensure voices are loaded; returns voices list (may be empty on some envs)
   const getVoicesAsync = () => {
@@ -120,34 +128,117 @@ const Chat = () => {
     setSelectedLanguage(e.target.value);
   };
 
-  // Load chat sessions and current session from localStorage on component mount
+  // Load chat sessions from MongoDB on component mount and when authentication changes
   useEffect(() => {
-    const savedSessions = localStorage.getItem('orthobotChatSessions');
-    const savedCurrentSessionId = localStorage.getItem('orthobotCurrentSessionId');
-    let sessions = [];
-    if (savedSessions) {
-      sessions = JSON.parse(savedSessions);
-      setChatSessions(sessions);
-    }
+    const loadChatHistory = async () => {
+      try {
+        if (isAuthenticated) {
+          // Load chat history from MongoDB for authenticated user
+          const result = await chatHistoryService.current.getUserChatHistory(20, 0);
+          if (result.success && result.chats) {
+            // Convert MongoDB format to local format for compatibility
+            const convertedSessions = result.chats.map(chat => ({
+              id: chat.chatId,
+              title: chat.title,
+              messages: [], // Messages will be loaded when chat is selected
+              lastUpdated: chat.updatedAt,
+              createdAt: chat.createdAt,
+              isVoiceCall: chat.isVoiceSession,
+              totalMessages: chat.totalMessages
+            }));
+            setChatSessions(convertedSessions);
+          }
 
-    if (savedCurrentSessionId && sessions.some(s => s.id === savedCurrentSessionId)) {
-      const session = sessions.find(s => s.id === savedCurrentSessionId);
-      if (session) {
-        setMessages(session.messages);
-        setCurrentSessionId(session.id);
-        setIsWelcomeScreen(session.messages.length === 0);
+          // Check for saved current session
+          const savedCurrentChatId = localStorage.getItem('orthobotCurrentChatId');
+          if (savedCurrentChatId) {
+            await loadChatConversation(savedCurrentChatId);
+          } else {
+            setIsWelcomeScreen(true);
+            setMessages([]);
+          }
+        } else {
+          // For non-authenticated users, use localStorage fallback
+          const savedSessions = localStorage.getItem('orthobotChatSessions');
+          if (savedSessions) {
+            const sessions = JSON.parse(savedSessions);
+            setChatSessions(sessions);
+          } else {
+            setChatSessions([]);
+          }
+          
+          // Also migrate any existing localStorage sessions (for backward compatibility)
+          const localSessions = chatHistoryService.current.migrateLocalStorageChats();
+          if (localSessions.length > 0) {
+            console.log('Found local sessions for potential migration:', localSessions.length);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        // Fallback to localStorage if MongoDB fails
+        const savedSessions = localStorage.getItem('orthobotChatSessions');
+        if (savedSessions) {
+          const sessions = JSON.parse(savedSessions);
+          setChatSessions(sessions);
+        }
       }
-    } else {
-        // if no current session, or it's invalid, start fresh
-        setCurrentSessionId(null);
-        setIsWelcomeScreen(true);
-        setMessages([]);
-    }
-        document.body.classList.add('chat-page');
-        return () => {
+    };
+
+    loadChatHistory();
+    document.body.classList.add('chat-page');
+    return () => {
       document.body.classList.remove('chat-page');
     };
-  }, []);
+  }, [isAuthenticated]); // Re-run when authentication status changes
+
+  // Clear chat history when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Clear current chat state
+      setMessages([]);
+      setCurrentChatId(null);
+      setCurrentSessionId(null);
+      setIsWelcomeScreen(true);
+      
+      // Clear saved current chat ID
+      localStorage.removeItem('orthobotCurrentChatId');
+      
+      // Reset chat sessions to empty or localStorage fallback
+      const savedSessions = localStorage.getItem('orthobotChatSessions');
+      if (savedSessions) {
+        const sessions = JSON.parse(savedSessions);
+        setChatSessions(sessions);
+      } else {
+        setChatSessions([]);
+      }
+    }
+  }, [isAuthenticated]);
+
+  // Function to load a specific chat conversation
+  const loadChatConversation = async (chatId) => {
+    try {
+      const result = await chatHistoryService.current.getChatConversation(chatId);
+      if (result.success && result.chat) {
+        // Convert MongoDB messages to local format
+        const convertedMessages = result.chat.messages.map(msg => ({
+          id: msg.messageId || Date.now() + Math.random(),
+          type: msg.role === 'user' ? 'user' : 'bot',
+          text: msg.content,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }));
+        
+        setMessages(convertedMessages);
+        setCurrentChatId(chatId);
+        setCurrentSessionId(chatId); // For compatibility
+        setIsWelcomeScreen(convertedMessages.length === 0);
+        
+        // Save current chat ID
+        localStorage.setItem('orthobotCurrentChatId', chatId);
+      }
+    } catch (error) {
+      console.error('Error loading chat conversation:', error);
+    }
+  };
 
   // Handle pending question after component is fully loaded
   useEffect(() => {
@@ -165,31 +256,25 @@ const Chat = () => {
     }
   }, [chatSessions]);
 
-  // Save chat sessions to localStorage whenever sessions change
+  // Save current chat ID to localStorage
   useEffect(() => {
-    localStorage.setItem('orthobotChatSessions', JSON.stringify(chatSessions));
-  }, [chatSessions]);
-
-  // Save current session ID to localStorage
-  useEffect(() => {
-    if (currentSessionId) {
-      localStorage.setItem('orthobotCurrentSessionId', currentSessionId);
+    if (currentChatId) {
+      localStorage.setItem('orthobotCurrentChatId', currentChatId);
     } else {
-      localStorage.removeItem('orthobotCurrentSessionId');
+      localStorage.removeItem('orthobotCurrentChatId');
     }
-  }, [currentSessionId]);
+  }, [currentChatId]);
 
-  // Auto-save current chat messages when they change
+  // Update chat sessions list when messages change (for UI updates)
   useEffect(() => {
-    if (currentSessionId && messages.length > 0) {
-      const updatedSessions = chatSessions.map(session => 
-        session.id === currentSessionId 
-          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
+    if (currentChatId && messages.length > 0) {
+      setChatSessions(prev => prev.map(session => 
+        session.id === currentChatId 
+          ? { ...session, totalMessages: messages.length, lastUpdated: new Date().toISOString() }
           : session
-      );
-      setChatSessions(updatedSessions);
+      ));
     }
-  }, [messages, currentSessionId]);
+  }, [messages, currentChatId]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -320,30 +405,58 @@ const Chat = () => {
   };
 
   // Handle saving voice conversation to chat history (ChatGPT style)
-  const handleSaveVoiceHistory = (voiceMessages, chatTitle) => {
+  const handleSaveVoiceHistory = async (voiceMessages, chatTitle) => {
     if (!voiceMessages || voiceMessages.length === 0) return;
     
     console.log('Saving voice conversation to chat history:', chatTitle, voiceMessages);
     
-    // Create new chat session for voice conversation
-    const newSessionId = Date.now().toString();
-    const newSession = {
-      id: newSessionId,
-      title: chatTitle,
-      messages: voiceMessages,
-      lastUpdated: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      isVoiceCall: true // Mark as voice call session
-    };
-    
-    // Add to chat sessions at the top (most recent)
-    setChatSessions(prev => [newSession, ...prev]);
-    
-    // Save to localStorage
-    const updatedSessions = [newSession, ...chatSessions];
-    localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
-    
-    console.log('Voice conversation saved to chat history successfully');
+    try {
+      // Convert voice messages to MongoDB format
+      const conversationHistory = voiceMessages.map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.text,
+        timestamp: new Date()
+      }));
+
+      // Save to MongoDB
+      const result = await chatHistoryService.current.saveVoiceConversation(
+        conversationHistory,
+        { detectedLanguage: selectedLanguage }
+      );
+
+      if (result.success) {
+        // Add to local chat sessions list for immediate UI update
+        const newSession = {
+          id: result.chatId,
+          title: result.title,
+          messages: voiceMessages,
+          lastUpdated: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          isVoiceCall: true,
+          totalMessages: voiceMessages.length
+        };
+        
+        setChatSessions(prev => [newSession, ...prev]);
+        console.log('Voice conversation saved to MongoDB successfully');
+      }
+    } catch (error) {
+      console.error('Error saving voice conversation to MongoDB:', error);
+      
+      // Fallback to localStorage
+      const newSessionId = Date.now().toString();
+      const newSession = {
+        id: newSessionId,
+        title: chatTitle,
+        messages: voiceMessages,
+        lastUpdated: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        isVoiceCall: true
+      };
+      
+      setChatSessions(prev => [newSession, ...prev]);
+      const updatedSessions = [newSession, ...chatSessions];
+      localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
+    }
   };
 
 
@@ -395,7 +508,7 @@ const Chat = () => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = (questionText = null, source = 'text') => {
+  const handleSendMessage = async (questionText = null, source = 'text') => {
     const messageText = questionText || inputValue.trim();
     if (messageText) {
       setIsWelcomeScreen(false);
@@ -409,36 +522,43 @@ const Chat = () => {
       const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
       
-      // Create or update chat session
-      if (!currentSessionId) {
-        const newSessionId = Date.now().toString();
-        const newSession = {
-          id: newSessionId,
-          title: extractIntent(inputValue),
-          messages: updatedMessages,
-          lastUpdated: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        };
-        setChatSessions(prev => [newSession, ...prev]);
-        setCurrentSessionId(newSessionId);
-      } else {
-        // Update existing session
-        setChatSessions(prev => prev.map(session => 
-          session.id === currentSessionId 
-            ? { ...session, messages: updatedMessages, lastUpdated: new Date().toISOString() }
-            : session
-        ));
+      // Get or create active chat using MongoDB
+      let activeChatId = currentChatId;
+      if (!activeChatId) {
+        try {
+          const chatTitle = chatHistoryService.current.extractIntent(messageText);
+          const result = await chatHistoryService.current.createNewChat(chatTitle, 'text_chat');
+          if (result.success) {
+            activeChatId = result.chatId;
+            setCurrentChatId(activeChatId);
+            setCurrentSessionId(activeChatId);
+            
+            // Add to local sessions list
+            const newSession = {
+              id: activeChatId,
+              title: result.title,
+              messages: updatedMessages,
+              lastUpdated: new Date().toISOString(),
+              createdAt: result.createdAt,
+              isVoiceCall: false,
+              totalMessages: 1
+            };
+            setChatSessions(prev => [newSession, ...prev]);
+          }
+        } catch (error) {
+          console.error('Error creating new chat:', error);
+        }
       }
       
       setInputValue('');
       
-      // Get AI response using Backend API
-      getBackendResponse(messageText, updatedMessages, source);
+      // Get AI response using MongoDB Backend API
+      getMongoDBResponse(messageText, activeChatId, source);
     }
   };
 
   // Process incoming question from ChatDemo
-  const processIncomingQuestion = (questionText, source = 'text') => {
+  const processIncomingQuestion = async (questionText, source = 'text') => {
     setIsWelcomeScreen(false);
     const newMessage = {
       id: Date.now(),
@@ -450,22 +570,90 @@ const Chat = () => {
     const updatedMessages = [newMessage];
     setMessages(updatedMessages);
     
-    // Create new chat session
-    const newSessionId = Date.now().toString();
-    const newSession = {
-      id: newSessionId,
-      title: extractIntent(questionText),
-      messages: updatedMessages,
-      lastUpdated: new Date().toISOString(),
-      createdAt: new Date().toISOString()
+    // Create new chat session using MongoDB
+    try {
+      const chatTitle = chatHistoryService.current.extractIntent(questionText);
+      const result = await chatHistoryService.current.createNewChat(chatTitle, 'text_chat');
+      if (result.success) {
+        setCurrentChatId(result.chatId);
+        setCurrentSessionId(result.chatId);
+        
+        // Add to local sessions list
+        const newSession = {
+          id: result.chatId,
+          title: result.title,
+          messages: updatedMessages,
+          lastUpdated: new Date().toISOString(),
+          createdAt: result.createdAt,
+          isVoiceCall: false,
+          totalMessages: 1
+        };
+        setChatSessions(prev => [newSession, ...prev]);
+        
+        setInputValue('');
+        
+        // Get AI response using MongoDB Backend API
+        getMongoDBResponse(questionText, result.chatId, source);
+      }
+    } catch (error) {
+      console.error('Error creating new chat for incoming question:', error);
+      // Fallback to old method
+      getBackendResponse(questionText, updatedMessages, source);
+    }
+  };
+
+  // MongoDB Backend API integration for real-time responses
+  const getMongoDBResponse = async (userMessage, chatId, source = 'text') => {
+    setIsGenerating(true);
+    shouldAutoSpeakRef.current = source === 'voice';
+    
+    // Add loading message
+    const loadingMessage = {
+      id: Date.now() + 1,
+      type: 'bot',
+      text: 'Thinking...',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isLoading: true
     };
-    setChatSessions(prev => [newSession, ...prev]);
-    setCurrentSessionId(newSessionId);
     
-    setInputValue('');
-    
-    // Get AI response using Backend API
-    getBackendResponse(questionText, updatedMessages, source);
+    setMessages(prev => [...prev, loadingMessage]);
+
+    try {
+      // Use the chat history service to send message and get response
+      const result = await chatHistoryService.current.sendMessage(userMessage, chatId, source);
+      
+      if (result.response || result.answer) {
+        const botResponse = result.response || result.answer;
+        const botMessage = {
+          id: Date.now() + 2,
+          type: 'bot',
+          text: botResponse,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isLoading: false
+        };
+
+        // Replace loading message with actual response
+        setMessages(prev => prev.map(msg => 
+          msg.isLoading ? botMessage : msg
+        ));
+
+        // Update current chat ID if returned
+        if (result.chatId && result.chatId !== chatId) {
+          setCurrentChatId(result.chatId);
+          setCurrentSessionId(result.chatId);
+        }
+      } else {
+        throw new Error('No response received from server');
+      }
+    } catch (error) {
+      console.error('Error getting MongoDB response:', error);
+      
+      // Fallback to original backend response
+      const currentMessages = messages.filter(msg => !msg.isLoading);
+      getBackendResponse(userMessage, currentMessages, source);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Backend API integration for real-time responses
@@ -618,42 +806,35 @@ const Chat = () => {
   };
 
   const startNewChat = () => {
-    // Save current chat before starting new one
-    if (currentSessionId && messages.length > 0) {
-      const updatedSessions = chatSessions.map(session => 
-        session.id === currentSessionId 
-          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
-          : session
-      );
-      setChatSessions(updatedSessions);
-      localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
-    }
-    
     setMessages([]);
     setIsWelcomeScreen(true);
     setInputValue('');
     setCurrentSessionId(null);
+    setCurrentChatId(null);
+    
+    // Clear saved current chat ID
+    localStorage.removeItem('orthobotCurrentChatId');
   };
 
-  const loadChatSession = (sessionId) => {
-    // Save current chat before switching
-    if (currentSessionId && messages.length > 0) {
-      const updatedSessions = chatSessions.map(session => 
-        session.id === currentSessionId 
-          ? { ...session, messages: messages, lastUpdated: new Date().toISOString() }
-          : session
-      );
-      setChatSessions(updatedSessions);
-      localStorage.setItem('orthobotChatSessions', JSON.stringify(updatedSessions));
-    }
-    
-    const session = chatSessions.find(s => s.id === sessionId);
-    if (session) {
-      setMessages(session.messages);
-      setCurrentSessionId(sessionId);
-      setIsWelcomeScreen(session.messages.length === 0);
+  const loadChatSession = async (sessionId) => {
+    try {
+      // Load chat conversation from MongoDB
+      await loadChatConversation(sessionId);
+      
       // Prevent auto-speaking when loading existing conversations
       shouldAutoSpeakRef.current = false;
+    } catch (error) {
+      console.error('Error loading chat session:', error);
+      
+      // Fallback to local session if available
+      const session = chatSessions.find(s => s.id === sessionId);
+      if (session && session.messages) {
+        setMessages(session.messages);
+        setCurrentSessionId(sessionId);
+        setCurrentChatId(sessionId);
+        setIsWelcomeScreen(session.messages.length === 0);
+        shouldAutoSpeakRef.current = false;
+      }
     }
   };
 
@@ -681,13 +862,28 @@ const Chat = () => {
     closeContextMenu();
   };
 
-  const saveRename = () => {
+  const saveRename = async () => {
     if (editTitle.trim()) {
-      setChatSessions(prev => prev.map(session => 
-        session.id === editingSession 
-          ? { ...session, title: editTitle.trim() }
-          : session
-      ));
+      try {
+        // Update title in MongoDB
+        const result = await chatHistoryService.current.updateChatTitle(editingSession, editTitle.trim());
+        if (result.success) {
+          // Update local state
+          setChatSessions(prev => prev.map(session => 
+            session.id === editingSession 
+              ? { ...session, title: editTitle.trim() }
+              : session
+          ));
+        }
+      } catch (error) {
+        console.error('Error updating chat title:', error);
+        // Still update locally as fallback
+        setChatSessions(prev => prev.map(session => 
+          session.id === editingSession 
+            ? { ...session, title: editTitle.trim() }
+            : session
+        ));
+      }
     }
     setEditingSession(null);
     setEditTitle('');
@@ -707,10 +903,24 @@ const Chat = () => {
     closeContextMenu(); 
   };  
 
-  const handleDelete = (sessionId) => {
-    setChatSessions(prev => prev.filter(session => session.id !== sessionId));
-    if (currentSessionId === sessionId) {
-      startNewChat();
+  const handleDelete = async (sessionId) => {
+    try {
+      // Delete from MongoDB
+      const result = await chatHistoryService.current.deleteChat(sessionId);
+      if (result.success) {
+        // Update local state
+        setChatSessions(prev => prev.filter(session => session.id !== sessionId));
+        if (currentSessionId === sessionId || currentChatId === sessionId) {
+          startNewChat();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      // Still delete locally as fallback
+      setChatSessions(prev => prev.filter(session => session.id !== sessionId));
+      if (currentSessionId === sessionId || currentChatId === sessionId) {
+        startNewChat();
+      }
     }
     closeContextMenu();
   };
@@ -993,65 +1203,95 @@ const Chat = () => {
             </button>
           </div>
 
-          <div className="section-divider"></div>
-          <div className="chat-history-section">
-            <h3 className="section-title">Chat History</h3>
-            <div className="chat-history-scrollable">
-              <div className="chat-history-list">
-                {filteredChatSessions.length > 0 ? (
-                  filteredChatSessions.map((session) => (
-                    <div 
-                      key={session.id} 
-                      className={`chat-history-item ${currentSessionId === session.id ? 'active' : ''} ${session.pinned ? 'pinned' : ''}`}
-                      onClick={() => loadChatSession(session.id)}
-                      onContextMenu={(e) => handleContextMenu(e, session.id)}
-                    >
-                      {editingSession === session.id ? (
-                        <input
-                          type="text"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          onBlur={saveRename}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveRename();
-                            if (e.key === 'Escape') cancelRename();
-                          }}
-                          className="edit-title-input"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span className="session-title">
-                          {session.isVoiceCall && <Mic size={14} className="voice-call-icon" />}
-                          {session.title}
-                        </span>
-                      )}
-                      {session.pinned && <Pin size={12} className="pin-icon" />}
-                      <button
-                        className="context-menu-trigger"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleContextMenu(e, session.id);
-                        }}
-                      >
-                        <MoreVertical size={16} />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-chats-message">
-                    {searchQuery ? 'No chats found' : 'No chat history yet'}
+          {/* Only show chat history for authenticated users */}
+          {isAuthenticated && (
+            <>
+              <div className="section-divider"></div>
+              <div className="chat-history-section">
+                <h3 className="section-title">Chat History</h3>
+                <div className="chat-history-scrollable">
+                  <div className="chat-history-list">
+                    {filteredChatSessions.length > 0 ? (
+                      filteredChatSessions.map((session) => (
+                        <div 
+                          key={session.id} 
+                          className={`chat-history-item ${currentSessionId === session.id ? 'active' : ''} ${session.pinned ? 'pinned' : ''}`}
+                          onClick={() => loadChatSession(session.id)}
+                          onContextMenu={(e) => handleContextMenu(e, session.id)}
+                        >
+                          {editingSession === session.id ? (
+                            <input
+                              type="text"
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              onBlur={saveRename}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveRename();
+                                if (e.key === 'Escape') cancelRename();
+                              }}
+                              className="edit-title-input"
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className="session-title">
+                              {session.isVoiceCall && <Mic size={14} className="voice-call-icon" />}
+                              {session.title}
+                            </span>
+                          )}
+                          {session.pinned && <Pin size={12} className="pin-icon" />}
+                          <button
+                            className="context-menu-trigger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContextMenu(e, session.id);
+                            }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-chats-message">
+                        {searchQuery ? 'No chats found' : 'No chat history yet'}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
+          
         </div>
 
         <div className="sidebar-footer">
-          <div className="user-profile">
+          <div 
+            className={`user-profile ${!isAuthenticated ? 'clickable' : ''}`}
+            onClick={!isAuthenticated ? () => navigate('/auth?redirect=/chat') : undefined}
+          >
             <User size={20} />
-            <span>Login</span>
+            <span>
+              {isAuthenticated && user 
+                ? `${user.firstName} ${user.lastName}` 
+                : 'Login'
+              }
+            </span>
+            {isAuthenticated && (
+              <button 
+                className="sidebar-logout-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    await logout();
+                  } catch (error) {
+                    console.error('Logout error:', error);
+                  }
+                }}
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>

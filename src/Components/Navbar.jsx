@@ -1,25 +1,79 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { User, LogOut, Settings } from "lucide-react";
+import Notification from "./Notification";
 import "../CSS/Navbar.css";
 import orthobotLogo from "../assets/orthobot.jpg";
 
 const Navbar = ({ scrollToTop }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
 
-  const navLinks = [
-    { name: "Home", href: "#home", id: "home", path: "/" },
-    { name: "Features", href: "#features", id: "features", path: "/" },
-    { name: "How it Works", href: "#how-it-works", id: "how-it-works", path: "/" },
-    { name: "FAQs", href: "#faqs", id: "faqs", path: "/" },
-    { name: "About Us", href: "/about", id: "about", path: "/about" },
-    { name: "Contact Us", href: "/contact", id: "contact", path: "/contact" },
-    { name: "Login/Signup", href: "#auth", id: "auth", path: "/" },
-  ];
+  // Dynamic nav links based on authentication status
+  const getNavLinks = () => {
+    const baseLinks = [
+      { name: "Home", href: "#home", id: "home", path: "/" },
+      { name: "Features", href: "#features", id: "features", path: "/" },
+      { name: "How it Works", href: "#how-it-works", id: "how-it-works", path: "/" },
+      { name: "FAQs", href: "#faqs", id: "faqs", path: "/" },
+      { name: "About Us", href: "/about", id: "about", path: "/about" },
+      { name: "Contact Us", href: "/contact", id: "contact", path: "/contact" },
+    ];
+    
+    if (!isAuthenticated) {
+      baseLinks.push({ name: "Login", href: "/auth", id: "auth", path: "/auth" });
+    }
+    
+    return baseLinks;
+  };
+  
+  const navLinks = getNavLinks();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  
+  const toggleUserDropdown = () => setShowUserDropdown(!showUserDropdown);
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowUserDropdown(false);
+      
+      // Show success notification
+      setNotification({
+        show: true,
+        message: 'Successfully logged out',
+        type: 'success'
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Show error notification
+      setNotification({
+        show: true,
+        message: 'Error logging out. Please try again.',
+        type: 'error'
+      });
+    }
+  };
+  
+  const closeNotification = () => {
+    setNotification({ show: false, message: '', type: 'success' });
+  };
+  
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    const firstInitial = user.firstName ? user.firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = user.lastName ? user.lastName.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial || 'U';
+  };
 
   const handleNavClick = (href, sectionName, sectionId) => {
     setActiveSection(sectionId);
@@ -60,16 +114,19 @@ const Navbar = ({ scrollToTop }) => {
     }
   };
 
-  // Close mobile menu when clicking outside
+  // Close mobile menu and user dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isMenuOpen && !event.target.closest(".navbar")) {
         setIsMenuOpen(false);
       }
+      if (showUserDropdown && !event.target.closest(".user-menu")) {
+        setShowUserDropdown(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMenuOpen]);
+  }, [isMenuOpen, showUserDropdown]);
 
   // Set active section based on route and handle scroll
   useEffect(() => {
@@ -136,12 +193,20 @@ const Navbar = ({ scrollToTop }) => {
   }, [window.location.pathname]);
 
   return (
-    <motion.nav
-      className="navbar"
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
+    <>
+      <Notification
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
+        onClose={closeNotification}
+      />
+      
+      <motion.nav
+        className="navbar"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
       <div className="navbar-container">
         {/* Logo */}
         <div
@@ -182,6 +247,42 @@ const Navbar = ({ scrollToTop }) => {
               {link.name}
             </motion.a>
           ))}
+          
+          {/* User Menu */}
+          {isAuthenticated && (
+            <div className="user-menu">
+              <motion.div
+                className="user-avatar"
+                onClick={toggleUserDropdown}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <User size={20} />
+              </motion.div>
+              
+              {showUserDropdown && (
+                <motion.div
+                  className="user-dropdown"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="user-info">
+                    <div className="user-name">
+                      {user?.firstName} {user?.lastName}
+                    </div>
+                    <div className="user-email">{user?.email}</div>
+                  </div>
+                  <div className="dropdown-divider"></div>
+                  <button className="dropdown-item" onClick={handleLogout}>
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
@@ -286,6 +387,7 @@ const Navbar = ({ scrollToTop }) => {
         />
       )}
     </motion.nav>
+    </>
   );
 };
 
