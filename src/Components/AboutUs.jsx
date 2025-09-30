@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../CSS/AboutUs.css';
-import logoImage from '../assets/logo.jpg';
+import logoImage from '../assets/Dr_Logo.png';
 
 const AboutUs = () => {
   const [achievements, setAchievements] = useState({

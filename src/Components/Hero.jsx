@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import '../CSS/Hero.css';
-import logoImage from '../assets/logo.jpg';
+import logoImage from '../assets/Dr_Logo.png';
 
 const Hero = () => {
   return (
