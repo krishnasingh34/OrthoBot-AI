@@ -1,5 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Clickable Links Styling */
+.message-bubble a {
+  color: #4a9eff !important;
+  text-decoration: underline !important;
+  word-break: break-all;
+  transition: color 0.2s ease;
+  font-weight: 500 !important;
+}
+
+.message-bubble a:hover {
+  color: #66b3ff !important;
+  text-decoration: underline !important;
+}
+
+.message-bubble a:visited {
+  color: #4a9eff !important; /* Keep visited links blue instead of purple */
+}
+
 * {
   margin: 0;
   padding: 0;

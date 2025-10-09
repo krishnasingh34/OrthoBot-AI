@@ -602,11 +602,16 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en', onSav
             timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));
           
-          // Generate chat title based on first user message or topic
-          const firstUserMessage = data.conversationHistory.find(msg => msg.role === 'user');
-          const chatTitle = firstUserMessage ? 
-            extractVoiceCallIntent(firstUserMessage.content) : 
-            'Voice Call Session';
+          // Generate chat title based on first few user messages for better intent detection
+          const userMessages = data.conversationHistory
+            .filter(msg => msg.role === 'user')
+            .slice(0, 3)
+            .map(msg => msg.content)
+            .join(' ');
+          
+          const chatTitle = userMessages ? 
+            extractVoiceCallIntent(userMessages) : 
+            'General Conversations';
           
           // Save to chat history via callback
           onSaveVoiceHistory(chatMessages, chatTitle);
@@ -622,6 +627,7 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en', onSav
   const extractVoiceCallIntent = (text) => {
     const cleanText = text.toLowerCase().trim();
     console.log('🎯 Analyzing text for intent:', cleanText);
+    console.log('🎯 Text length:', cleanText.length);
     
     // Intent patterns for meaningful chat titles (without "Voice Call:" prefix)
     const intentPatterns = {
