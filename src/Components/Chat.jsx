@@ -30,6 +30,21 @@ import { useAuth } from '../contexts/AuthContext';
 import '../CSS/Chat.css';
 import profileLogo from '../assets/favicon.png';
 
+// Function to make URLs clickable in text
+const makeLinksClickable = (text) => {
+  if (!text) return text;
+  
+  // First convert newlines to HTML line breaks
+  let formattedText = text.replace(/\n/g, '<br>');
+  
+  // URL regex pattern
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g;
+  
+  return formattedText.replace(urlRegex, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #4a9eff !important; text-decoration: underline; word-break: break-all; font-weight: 500;">${url}</a>`;
+  });
+};
+
 const Chat = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, authService, logout } = useAuth();
@@ -421,7 +436,7 @@ const Chat = () => {
       // Save to MongoDB
       const result = await chatHistoryService.current.saveVoiceConversation(
         conversationHistory,
-        { detectedLanguage: selectedLanguage }
+        { detectedLanguage: selectedLanguage, chatTitle }
       );
 
       if (result.success) {
@@ -1474,9 +1489,9 @@ const Chat = () => {
                       {message.isLoading ? (
                         <p><span className="loading-dots"></span></p>
                       ) : message.type === 'bot' ? (
-                        <div dangerouslySetInnerHTML={{ __html: message.text }} />
-) : (
-                        <p>{message.text}</p>
+                        <div dangerouslySetInnerHTML={{ __html: makeLinksClickable(message.text) }} />
+                      ) : (
+                        <div dangerouslySetInnerHTML={{ __html: makeLinksClickable(message.text) }} />
                       )}
                     </div>
                     {/* Bot timestamp removed as requested */}
