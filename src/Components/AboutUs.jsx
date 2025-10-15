@@ -51,6 +51,217 @@ const AboutUs = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Initialize floating chat widget
+  useEffect(() => {
+    // Create floating chat button and iframe
+    const createFloatingChat = () => {
+      // Check if chat elements already exist
+      if (document.getElementById('floating-chat-button')) return;
+
+      // Get screen dimensions for responsive sizing
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+
+      // Create floating chat button
+      const chatButton = document.createElement('div');
+      chatButton.id = 'floating-chat-button';
+      chatButton.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+        </svg>
+      `;
+      // Responsive button sizing
+      let buttonSize, buttonBottom, buttonRight;
+      
+      if (screenWidth <= 480) {
+        // Mobile phones - smaller button
+        buttonSize = '50px';
+        buttonBottom = '15px';
+        buttonRight = '10px';
+      } else if (screenWidth <= 768) {
+        // Tablets - medium button
+        buttonSize = '55px';
+        buttonBottom = '18px';
+        buttonRight = '20px';
+      } else {
+        // Desktop - full size button
+        buttonSize = '60px';
+        buttonBottom = '20px';
+        buttonRight = '20px';
+      }
+      
+      chatButton.style.cssText = `
+        position: fixed;
+        bottom: ${buttonBottom};
+        right: ${buttonRight};
+        width: ${buttonSize};
+        height: ${buttonSize};
+        background: linear-gradient(135deg, #FF3964, #85A9DB);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(255, 57, 100, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+      `;
+
+      // Create chat iframe container with responsive design
+      const chatContainer = document.createElement('div');
+      chatContainer.id = 'floating-chat-container';
+      
+      // Responsive dimensions based on screen size
+      let chatWidth, chatHeight, bottomPos, rightPos;
+      
+      if (screenWidth <= 480) {
+        // Mobile phones - full width with margins, avoid top cut-off
+        chatWidth = Math.min(screenWidth - 20, 350);
+        chatHeight = Math.min(screenHeight - 180, 400); // Reduced height to avoid top cut
+        bottomPos = '90px';
+        rightPos = '10px';
+      } else if (screenWidth <= 768) {
+        // Tablets - medium size with proper margins
+        chatWidth = Math.min(screenWidth - 40, 380);
+        chatHeight = Math.min(screenHeight - 200, 450); // Reduced height for tablets
+        bottomPos = '90px';
+        rightPos = '20px';
+      } else {
+        // Desktop - full size with safe margins
+        chatWidth = 420;
+        chatHeight = Math.min(screenHeight - 150, 550); // Ensure it doesn't exceed screen
+        bottomPos = '90px';
+        rightPos = '20px';
+      }
+      
+      chatContainer.style.cssText = `
+        position: fixed;
+        bottom: ${bottomPos};
+        right: ${rightPos};
+        width: ${chatWidth}px;
+        height: ${chatHeight}px;
+        max-width: calc(100vw - 30px);
+        max-height: calc(100vh - 180px);
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        display: none;
+        overflow: hidden;
+      `;
+
+      // Create iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://dr-rameshwar-appointment-gahmdwcjg2gjdwbh.centralindia-01.azurewebsites.net/webhook/8dfdf952-bc16-44c1-b436-709a0e94d524/chat';
+      iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 12px;
+      `;
+      iframe.allow = 'microphone; camera; geolocation';
+      iframe.title = 'Dr. Rameshwar AI Assistant';
+
+      chatContainer.appendChild(iframe);
+
+      // Add click event to toggle chat
+      let isOpen = false;
+      chatButton.addEventListener('click', () => {
+        isOpen = !isOpen;
+        chatContainer.style.display = isOpen ? 'block' : 'none';
+        chatButton.style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0deg)';
+      });
+
+      // Add hover effects
+      chatButton.addEventListener('mouseenter', () => {
+        chatButton.style.transform = 'scale(1.1)';
+      });
+      
+      chatButton.addEventListener('mouseleave', () => {
+        chatButton.style.transform = isOpen ? 'rotate(45deg)' : 'scale(1)';
+      });
+
+      // Add window resize listener for dynamic responsiveness
+      const handleResize = () => {
+        const newScreenWidth = window.innerWidth;
+        const newScreenHeight = window.innerHeight;
+        
+        // Update chat container dimensions
+        let newChatWidth, newChatHeight, newBottomPos, newRightPos;
+        let newButtonSize, newButtonBottom, newButtonRight;
+        
+        if (newScreenWidth <= 480) {
+          // Mobile phones - avoid top cut-off
+          newChatWidth = Math.min(newScreenWidth - 20, 350);
+          newChatHeight = Math.min(newScreenHeight - 180, 400);
+          newBottomPos = '90px';
+          newRightPos = '10px';
+          newButtonSize = '50px';
+          newButtonBottom = '15px';
+          newButtonRight = '10px';
+        } else if (newScreenWidth <= 768) {
+          // Tablets - proper margins
+          newChatWidth = Math.min(newScreenWidth - 40, 380);
+          newChatHeight = Math.min(newScreenHeight - 200, 450);
+          newBottomPos = '90px';
+          newRightPos = '20px';
+          newButtonSize = '55px';
+          newButtonBottom = '18px';
+          newButtonRight = '20px';
+        } else {
+          // Desktop - safe margins
+          newChatWidth = 420;
+          newChatHeight = Math.min(newScreenHeight - 150, 550);
+          newBottomPos = '90px';
+          newRightPos = '20px';
+          newButtonSize = '60px';
+          newButtonBottom = '20px';
+          newButtonRight = '20px';
+        }
+        
+        // Update chat container styles
+        chatContainer.style.width = `${newChatWidth}px`;
+        chatContainer.style.height = `${newChatHeight}px`;
+        chatContainer.style.bottom = newBottomPos;
+        chatContainer.style.right = newRightPos;
+        
+        // Update button styles
+        chatButton.style.width = newButtonSize;
+        chatButton.style.height = newButtonSize;
+        chatButton.style.bottom = newButtonBottom;
+        chatButton.style.right = newButtonRight;
+      };
+      
+      // Add resize event listener
+      window.addEventListener('resize', handleResize);
+      
+      // Store resize handler for cleanup
+      chatButton.resizeHandler = handleResize;
+
+      // Append to body
+      document.body.appendChild(chatButton);
+      document.body.appendChild(chatContainer);
+    };
+
+    // Create floating chat after component mounts
+    const timer = setTimeout(createFloatingChat, 1000);
+    
+    return () => {
+      clearTimeout(timer);
+      // Cleanup on unmount
+      const button = document.getElementById('floating-chat-button');
+      const container = document.getElementById('floating-chat-container');
+      
+      // Remove resize event listener
+      if (button && button.resizeHandler) {
+        window.removeEventListener('resize', button.resizeHandler);
+      }
+      
+      if (button) button.remove();
+      if (container) container.remove();
+    };
+  }, []);
+
   return (
     <div className="about-us page-container">
       {/* Header Section */}
@@ -187,6 +398,7 @@ const AboutUs = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

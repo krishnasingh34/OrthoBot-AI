@@ -16,7 +16,7 @@ const Navbar = ({ scrollToTop }) => {
   const { user, isAuthenticated, logout } = useAuth();
 
   // Dynamic nav links based on authentication status
-  const getNavLinks = () => {
+  const getNavLinks = (isMobileView = false) => {
     const baseLinks = [
       { name: "Home", href: "#home", id: "home", path: "/" },
       { name: "Features", href: "#features", id: "features", path: "/" },
@@ -27,12 +27,15 @@ const Navbar = ({ scrollToTop }) => {
     
     if (!isAuthenticated) {
       baseLinks.push({ name: "Login", href: "/auth", id: "auth", path: "/auth" });
+    } else if (isMobileView) {
+      baseLinks.push({ name: "Logout", href: "#", id: "logout", path: "#" });
     }
     
     return baseLinks;
   };
   
-  const navLinks = getNavLinks();
+  const desktopNavLinks = getNavLinks(false);
+  const mobileNavLinks = getNavLinks(true);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -75,6 +78,11 @@ const Navbar = ({ scrollToTop }) => {
   };
 
   const handleNavClick = (href, sectionName, sectionId) => {
+    if (sectionId === 'logout') {
+      handleLogout();
+      return;
+    }
+    
     setActiveSection(sectionId);
     setIsMenuOpen(false);
 
@@ -149,15 +157,13 @@ const Navbar = ({ scrollToTop }) => {
     // Only handle scroll-based highlighting on home page
     if (path === '/') {
       const handleScroll = () => {
-        const sections = ["home", "features", "how-it-works", "faqs", "auth"];
+        const sections = ["home", "features", "chat-demo", "faqs"];
         const scrollPosition = window.scrollY + 150;
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
 
-        if (window.scrollY + windowHeight >= documentHeight - 50) {
-          setActiveSection("contact");
-          return;
-        }
+        // Remove the bottom scroll detection that was highlighting "contact"
+        // Keep "home" highlighted when on homepage regardless of scroll position
 
         let currentSection = "home";
         for (let i = 0; i < sections.length; i++) {
@@ -175,6 +181,8 @@ const Navbar = ({ scrollToTop }) => {
             }
           }
         }
+        
+        // Set the active section based on current scroll position
         setActiveSection(currentSection);
       };
 
@@ -228,24 +236,44 @@ const Navbar = ({ scrollToTop }) => {
 
         {/* Desktop Links */}
         <div className="navbar-links">
-          {navLinks.map((link, index) => (
-            <motion.a
-              key={index}
-              href={link.href}
-              className={`nav-link ${
-                activeSection === link.id ? "active" : ""
-              }`}
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick(link.href, link.name, link.id);
-              }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-              style={{ cursor: "pointer" }}
-            >
-              {link.name}
-            </motion.a>
-          ))}
+          <div className="nav-links-center">
+            {desktopNavLinks.filter(link => link.id !== 'auth').map((link, index) => (
+              <motion.a
+                key={index}
+                href={link.href}
+                className={`nav-link ${
+                  activeSection === link.id ? "active" : ""
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(link.href, link.name, link.id);
+                }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                style={{ cursor: "pointer" }}
+              >
+                {link.name}
+              </motion.a>
+            ))}
+          </div>
+          
+          {/* Login Button */}
+          <div className="nav-links-right">
+            {!isAuthenticated && (
+              <motion.button
+                className="login-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick('/auth', 'Login', 'auth');
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                Login
+              </motion.button>
+            )}
+          </div>
           
           {/* User Menu */}
           {isAuthenticated && (
@@ -323,11 +351,12 @@ const Navbar = ({ scrollToTop }) => {
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <div className="mobile-menu-content">
-          {navLinks.map((link, index) =>
+          {mobileNavLinks.filter(link => link.id !== 'auth').map((link, index) =>
             link.href.startsWith("#") ? (
               <motion.a
                 key={index}
                 href={link.href}
+                data-id={link.id}
                 className={`mobile-nav-link ${
                   activeSection ===
                   link.name.toLowerCase().replace(/\s+/g, "-")
@@ -354,8 +383,9 @@ const Navbar = ({ scrollToTop }) => {
             ) : (
               <motion.span
                 key={index}
+                data-id={link.id}
                 className="mobile-nav-link"
-                onClick={() => handleNavClick(link.href, link.name)}
+                onClick={() => handleNavClick(link.href, link.name, link.id)}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{
                   opacity: isMenuOpen ? 1 : 0,
@@ -370,6 +400,28 @@ const Navbar = ({ scrollToTop }) => {
                 {link.name}
               </motion.span>
             )
+          )}
+          
+          {/* Login Button for Mobile */}
+          {!isAuthenticated && (
+            <motion.button
+              className="mobile-cta-button"
+              onClick={() => {
+                handleNavClick('/auth', 'Login', 'auth');
+              }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{
+                opacity: isMenuOpen ? 1 : 0,
+                x: isMenuOpen ? 0 : 50,
+              }}
+              transition={{
+                duration: 0.3,
+                delay: isMenuOpen ? mobileNavLinks.length * 0.1 : 0,
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Login
+            </motion.button>
           )}
         </div>
       </motion.div>

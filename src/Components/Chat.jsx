@@ -80,6 +80,19 @@ const Chat = () => {
   const shouldAutoSpeakRef = useRef(false);
   const chatHistoryService = useRef(new ChatHistoryService(authService));
 
+  // Add resize listener to handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      // If transitioning from mobile to desktop view, ensure sidebar can be open
+      if (!isMobileView()) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Ensure voices are loaded; returns voices list (may be empty on some envs)
   const getVoicesAsync = () => {
     return new Promise((resolve) => {
@@ -298,19 +311,10 @@ const Chat = () => {
     }
   }, [messages]);
 
-  // Auto-resize textarea when inputValue changes
+  // Keep textarea height fixed
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const newHeight = Math.min(textareaRef.current.scrollHeight, 200);
-      textareaRef.current.style.height = Math.max(newHeight, 40) + 'px';
-      
-      // Smooth scroll to bottom if content exceeds max height
-      if (textareaRef.current.scrollHeight > 200) {
-        setTimeout(() => {
-          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-        }, 0);
-      }
+      textareaRef.current.style.height = '40px';
     }
   }, [inputValue]);
 
@@ -816,6 +820,10 @@ const Chat = () => {
     }
   };
 
+  const isMobileView = () => {
+    return window.innerWidth < 768; // Match the CSS breakpoint
+  };
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -826,6 +834,11 @@ const Chat = () => {
     setInputValue('');
     setCurrentSessionId(null);
     setCurrentChatId(null);
+    
+    // Only close sidebar on mobile view
+    if (isMobileView()) {
+      setSidebarOpen(false);
+    }
     
     // Clear saved current chat ID
     localStorage.removeItem('orthobotCurrentChatId');
@@ -838,6 +851,11 @@ const Chat = () => {
       
       // Prevent auto-speaking when loading existing conversations
       shouldAutoSpeakRef.current = false;
+      
+      // Only close sidebar on mobile view
+      if (isMobileView()) {
+        setSidebarOpen(false);
+      }
     } catch (error) {
       console.error('Error loading chat session:', error);
       
@@ -1582,24 +1600,16 @@ const Chat = () => {
               disabled={isListening}
               rows={1}
               style={{
-                minHeight: '40px',
-                maxHeight: '200px',
+                minHeight: '24px',
+                maxHeight: '100px',
                 resize: 'none',
-                overflowY: 'auto',
-                overflowX: 'hidden'
+                overflowY: 'auto'
               }}
               onInput={(e) => {
-                // Auto-resize textarea
+                // Auto-resize with max height
                 e.target.style.height = 'auto';
-                const newHeight = Math.min(e.target.scrollHeight, 200);
-                e.target.style.height = Math.max(newHeight, 40) + 'px';
-                
-                // Smooth scroll to bottom if content exceeds max height
-                if (e.target.scrollHeight > 200) {
-                  setTimeout(() => {
-                    e.target.scrollTop = e.target.scrollHeight;
-                  }, 0);
-                }
+                const newHeight = Math.min(e.target.scrollHeight, 100);
+                e.target.style.height = Math.max(newHeight, 24) + 'px';
               }}
             />
             <div className="input-actions">
