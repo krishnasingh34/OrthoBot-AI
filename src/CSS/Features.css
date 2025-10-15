@@ -2,7 +2,8 @@
 
 .features-section {
   padding: 60px 20px;
-  background: #f0fdfa;
+  background: #F1F5F9 !important;
+  background-color: #F1F5F9 !important;
   min-height: 90vh;
   display: flex;
   align-items: center;
@@ -19,7 +20,7 @@
   font-size: 2.8rem;
   font-weight: 700;
   text-align: center;
-  color: #1f2937;
+  color: #0F172A;
   margin-bottom: 40px;
   position: relative;
 }
@@ -32,7 +33,7 @@
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background: linear-gradient(90deg, #14b8a6, #0d9488);
+  background: linear-gradient(90deg, #4FBDBC, #3FA5A4);
   border-radius: 2px;
 }
 
@@ -46,13 +47,14 @@
 }
 
 .feature-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
   border-radius: 14px;
   padding: 20px 18px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
   height: fit-content;
@@ -65,7 +67,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #14b8a6, #0d9488);
+  background: linear-gradient(90deg, #4FBDBC, #3FA5A4);
   transform: scaleX(0);
   transition: transform 0.3s ease;
   transform-origin: left;
@@ -77,15 +79,15 @@
 
 .feature-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 35px rgba(20, 184, 166, 0.12);
-  border-color: #14b8a6;
+  box-shadow: 0 12px 35px rgba(79, 189, 188, 0.12);
+  border-color: #4FBDBC;
 }
 
 .feature-icon {
   width: 55px;
   height: 55px;
   margin: 0 auto 15px;
-  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  background: linear-gradient(135deg, #4FBDBC, #3FA5A4);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -96,14 +98,14 @@
 
 .feature-card:hover .feature-icon {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(20, 184, 166, 0.25);
+  box-shadow: 0 8px 25px rgba(79, 189, 188, 0.25);
 }
 
 .feature-title {
   font-family: 'Inter', 'Poppins', sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #0F172A;
   margin-bottom: 8px;
   line-height: 1.2;
 }

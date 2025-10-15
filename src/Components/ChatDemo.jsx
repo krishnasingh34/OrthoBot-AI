@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Send, 
+  ArrowUp, 
   Mic,
   Search
 } from 'lucide-react';
@@ -127,7 +127,7 @@ const ChatDemoContent = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          Live Chatbox Demo
+          Chat with OrthoBot
         </motion.h2>
         
         <motion.div 
@@ -171,7 +171,7 @@ const ChatDemoContent = () => {
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <Send size={20} />
+              <ArrowUp size={20} />
             </motion.button>
           </motion.div>
 

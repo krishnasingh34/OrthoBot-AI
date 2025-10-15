@@ -15,6 +15,7 @@ import ContactUs from './Components/ContactUs';
 import PrivacyPolicy from './Components/PrivacyPolicy';
 import TermsConditions from './Components/TermsConditions';
 import Auth from './Components/Auth';
+import WhatsAppFloat from './Components/WhatsAppFloat';
 
 const HomePage = ({ scrollToTop }) => {
   return (
@@ -22,11 +23,12 @@ const HomePage = ({ scrollToTop }) => {
       <Navbar scrollToTop={scrollToTop} />
       <main className="main-content">
         <Hero />
-        <Features />
         <ChatDemo />
+        <Features />
         <FAQ />
       </main>
       <Footer />
+      <WhatsAppFloat />
     </div>
   );
 };

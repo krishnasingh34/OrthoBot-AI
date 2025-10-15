@@ -63,9 +63,19 @@
 .contact-info-section { display: none; }
 
 /* New simplified content structure */
-.contact-content { background: #fff; padding: 60px 0 100px; }
+.contact-content { 
+  background: #fff; 
+  padding: 60px 0 100px;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
 
-.contact-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; }
+.contact-actions { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 2rem; 
+  margin-bottom: 2.5rem;
+  max-width: 100%;
+}
 .action-card { display: flex; align-items: center; gap: 1rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.06); transition: transform 0.35s ease, box-shadow 0.35s ease; will-change: transform; }
 .action-card:hover { transform: translateY(-6px) scale(1.05); box-shadow: 0 16px 32px rgba(0,0,0,0.12); }
 .action-icon { width: 56px; height: 56px; border-radius: 12px; display:flex; align-items:center; justify-content:center; transition: transform 0.35s ease; transform-origin: center; }
@@ -280,7 +290,31 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .contact-actions { grid-template-columns: 1fr; }
+  .contact-actions { 
+    grid-template-columns: 1fr; 
+    margin: 0 1rem 2rem 1rem;
+  }
+  
+  .action-card {
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.25rem;
+  }
+
+  .action-content {
+    width: 100%;
+  }
+
+  .action-content h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .action-content a {
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
   .locations-grid { grid-template-columns: 1fr; }
   .contact-header { min-height: 45vh; padding: 90px 0 50px; }
   .header-content h1 {
@@ -294,11 +328,45 @@
 
 @media (max-width: 480px) {
   .contact-container {
-    padding: 0 1rem;
+    padding: 0 0.75rem;
   }
   
-  .contact-content { padding: 40px 0 60px; }
-  .contact-header { min-height: 40vh; padding: 80px 0 40px; }
+  .contact-content { 
+    padding: 40px 0 60px;
+  }
+  
+  .contact-header { 
+    min-height: 40vh; 
+    padding: 80px 0 40px;
+  }
+  
+  .contact-actions {
+    margin: 0 0.5rem 1.5rem 0.5rem;
+  }
+
+  .action-card {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    width: calc(100% - 1rem);
+  }
+
+  .action-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .action-content h3 {
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .action-content a {
+    font-size: 0.9rem;
+    display: block;
+    width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
   
   .header-content h1 {
     font-size: 1.75rem;

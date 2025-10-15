@@ -4,13 +4,16 @@
 /* Hero Section */
 .hero {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #A7FFEB 0%, #E0F7FA 100%);
+  background: #F1F5F9 !important;
+  background-color: #F1F5F9 !important;
   display: flex;
   align-items: center;
-  padding: 20px 0 0 0;
+  padding: 0;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .hero-container {
@@ -22,7 +25,9 @@
   gap: 2rem;
   align-items: center;
   width: 100%;
+  max-width: 100%;
   height: auto;
+  box-sizing: border-box;
 }
 
 /* Left Content */
@@ -32,6 +37,13 @@
   gap: 1rem;
   justify-content: center;
   align-items: flex-start;
+  transform: translateY(-40px);
+}
+
+@media (max-width: 768px) {
+  .hero-content {
+    transform: translateY(-20px);
+  }
 }
 
 .hero-headline {
@@ -39,14 +51,14 @@
   font-size: 2.5rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #000000 !important;
+  color: #0F172A !important;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hero-headline .highlight {
-  color: #8B5CF6;
-  background: linear-gradient(45deg, #8B5CF6, #7C3AED);
+  color: #0EA5A4;
+  background: linear-gradient(45deg, #0EA5A4, #0C8D8C);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -58,7 +70,7 @@
   font-size: 1.1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #6b7280;
+  color: #64748B;
   margin: 0;
   max-width: 85%;
 }
@@ -71,7 +83,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  background: linear-gradient(135deg, #0EA5A4 0%, #0C8D8C 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -81,21 +93,21 @@
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 15px rgba(14, 165, 164, 0.3);
   position: relative;
   overflow: hidden;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  background: linear-gradient(135deg, #0C8D8C 0%, #0EA5A4 100%);
   transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4), 0 0 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 25px rgba(14, 165, 164, 0.4), 0 0 20px rgba(14, 165, 164, 0.3);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #8B5CF6;
-  border: 2px solid #8B5CF6;
+  color: #0EA5A4;
+  border: 2px solid #0EA5A4;
   padding: 1rem 2rem;
   font-family: 'Poppins', sans-serif;
   font-size: 1.1rem;
@@ -106,19 +118,22 @@
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  background: linear-gradient(135deg, #0EA5A4 0%, #0C8D8C 100%);
   color: white;
   transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4), 0 0 15px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 15px rgba(14, 165, 164, 0.4), 0 0 15px rgba(14, 165, 164, 0.2);
 }
 
 /* Right Image */
 .hero-image {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  justify-content: flex-end;
+  align-items: center;
   height: 100%;
   padding-top: 0;
+  padding-right: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .doctor-placeholder {
@@ -130,17 +145,20 @@
 
 .doctor-logo {
   width: 100%;
-  max-width: 350px;
-  height: auto;
+  max-width: 550px;
+  height: 90vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  overflow: hidden;
 }
 
 .doctor-logo img {
-  width: 530px;
-  height:1200px;
+  width: 150%;
+  height: auto;
+  max-width: 150%;
   object-fit: contain;
+  transform: translateY(44px) translateX(0px);
 }
 
 /* Responsive Design */
@@ -194,7 +212,7 @@
 /* Desktop (1025px - 1199px) */
 @media (min-width: 1025px) and (max-width: 1199px) {
   .hero {
-    padding: 15px 0 0 0;
+    padding: 70px 0 0 0;
   }
   
   .hero-container {
@@ -203,7 +221,7 @@
   }
   
   .hero-content {
-    padding-top: 1rem;
+    padding-top: 0;
   }
   
   .hero-headline {
@@ -222,7 +240,7 @@
 /* Tablet Large (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
   .hero {
-    padding: 15px 0 0 0;
+    padding: 60px 0 0 0;
     min-height: 100vh;
   }
   
@@ -232,7 +250,7 @@
   }
   
   .hero-content {
-    padding-top: 1.5rem;
+    padding-top: 0;
   }
   
   .hero-headline {
@@ -269,24 +287,35 @@
 @media (min-width: 481px) and (max-width: 768px) {
   .hero {
     height: 100vh;
-    padding: 10px 0 0 0;
-    align-items: center;
+    padding: 0;
+    align-items: flex-start;
+    padding-top: 5px;
+    overflow-x: hidden;
   }
   
   .hero-container {
     grid-template-columns: 1fr;
-    gap: 1.8rem;
+    gap: 0.8rem;
     text-align: center;
     height: auto;
-    padding: 0 1.5rem;
+    padding: 0 1rem;
+    padding-top: 0;
+    max-width: 100%;
+  }
+  
+  .hero-image {
+    padding-right: 0;
+    max-width: 100%;
+    margin-top: 14px;
   }
   
   .hero-content {
-    gap: 1rem;
+    gap: 0.5rem;
     padding-top: 0;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     order: 1;
+    transform: translateY(0);
   }
   
   .hero-image {
@@ -296,7 +325,7 @@
   
   .hero-headline {
     font-size: 2rem;
-    line-height: 1.2;
+    line-height: 1.1;
     margin-bottom: 0.5rem;
   }
   
@@ -308,26 +337,33 @@
   
   .hero-buttons {
     justify-content: center;
-    gap: 1rem;
-    margin-top: 0.8rem;
+    gap: 0.8rem;
+    margin-top: 0.6rem;
     flex-wrap: wrap;
+    width: 100%;
   }
   
   .btn-primary,
   .btn-secondary {
-    padding: 0.9rem 1.5rem;
+    padding: 0.9rem 2rem;
     font-size: 0.95rem;
-    min-width: 140px;
+    min-width: 160px;
     border-radius: 30px;
   }
   
   .doctor-logo {
-    max-width: 250px;
+    max-width: 380px;
+    height: 70vh;
   }
   
   .doctor-logo img {
-    width: 100%;
+    width: 140%;
     height: auto;
+    transform: translateY(64px) translateX(0);
+  }
+  
+  .hero-image {
+    justify-content: center;
   }
 }
 
@@ -335,24 +371,35 @@
 @media (min-width: 376px) and (max-width: 480px) {
   .hero {
     height: 100vh;
-    padding: 5px 0 0 0;
-    align-items: center;
+    padding: 0;
+    padding-top: 5px;
+    align-items: flex-start;
+    overflow-x: hidden;
   }
   
   .hero-container {
     grid-template-columns: 1fr;
-    padding: 0 1.2rem;
-    gap: 1.5rem;
+    padding: 0 1rem;
+    padding-top: 0;
+    gap: 0.6rem;
     height: auto;
     text-align: center;
+    max-width: 100%;
+  }
+  
+  .hero-image {
+    padding-right: 0;
+    max-width: 100%;
+    margin-top: 12px;
   }
   
   .hero-content {
-    gap: 0.8rem;
+    gap: 0.4rem;
     padding-top: 0;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     order: 1;
+    transform: translateY(0);
   }
   
   .hero-image {
@@ -362,7 +409,7 @@
   
   .hero-headline {
     font-size: 1.7rem;
-    line-height: 1.25;
+    line-height: 1.15;
     margin-bottom: 0.3rem;
   }
   
@@ -373,29 +420,43 @@
   }
   
   .hero-buttons {
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
-    gap: 0.8rem;
-    margin-top: 0.8rem;
+    gap: 0.7rem;
+    margin-top: 0.5rem;
     width: 100%;
+    flex-wrap: wrap;
   }
   
-  .btn-primary,
-  .btn-secondary {
-    padding: 0.8rem 1.5rem;
+  .btn-primary {
+    padding: 0.8rem 1.8rem;
     font-size: 0.9rem;
-    width: 100%;
-    max-width: 280px;
+    width: auto;
+    min-width: 160px;
+    border-radius: 25px;
+  }
+  
+  .btn-secondary {
+    padding: 0.8rem 1.8rem;
+    font-size: 0.9rem;
+    width: auto;
+    min-width: 160px;
     border-radius: 25px;
   }
   
   .doctor-logo {
-    max-width: 200px;
+    max-width: 320px;
+    height: 65vh;
   }
   
   .doctor-logo img {
-    width: 100%;
+    width: 130%;
     height: auto;
+    transform: translateY(56px) translateX(0);
+  }
+  
+  .hero-image {
+    justify-content: center;
   }
 }
 
@@ -403,24 +464,35 @@
 @media (min-width: 321px) and (max-width: 375px) {
   .hero {
     height: 100vh;
-    padding: 5px 0 0 0;
-    align-items: center;
+    padding: 0;
+    padding-top: 5px;
+    align-items: flex-start;
+    overflow-x: hidden;
   }
   
   .hero-container {
     grid-template-columns: 1fr;
-    padding: 0 1rem;
-    gap: 1.2rem;
+    padding: 0 0.8rem;
+    padding-top: 0;
+    gap: 0.5rem;
     height: auto;
     text-align: center;
+    max-width: 100%;
+  }
+  
+  .hero-image {
+    padding-right: 0;
+    max-width: 100%;
+    margin-top: 10px;
   }
   
   .hero-content {
-    gap: 0.7rem;
+    gap: 0.3rem;
     padding-top: 0;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     order: 1;
+    transform: translateY(0);
   }
   
   .hero-image {
@@ -430,8 +502,8 @@
   
   .hero-headline {
     font-size: 1.5rem;
-    line-height: 1.3;
-    margin-bottom: 0.2rem;
+    line-height: 1.2;
+    margin-bottom: 0;
   }
   
   .hero-subheading {
@@ -442,22 +514,41 @@
   .hero-buttons {
     flex-direction: column;
     justify-content: center;
-    gap: 0.7rem;
-    margin-top: 0.6rem;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
     width: 100%;
   }
   
-  .btn-primary,
-  .btn-secondary {
-    padding: 0.7rem 1.3rem;
+  .btn-primary {
+    padding: 0.75rem 1.5rem;
     font-size: 0.85rem;
     width: 100%;
-    max-width: 260px;
-    border-radius: 22px;
+    max-width: 240px;
+    border-radius: 25px;
+  }
+  
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    width: 100%;
+    max-width: 240px;
+    border-radius: 25px;
   }
   
   .doctor-logo {
-    max-width: 180px;
+    max-width: 280px;
+    height: 60vh;
+  }
+  
+  .doctor-logo img {
+    width: 120%;
+    height: auto;
+    transform: translateY(46px) translateX(0);
+  }
+  
+  .hero-image {
+    justify-content: center;
   }
 }
 
@@ -465,24 +556,35 @@
 @media (max-width: 320px) {
   .hero {
     height: 100vh;
-    padding: 5px 0 0 0;
-    align-items: center;
+    padding: 0;
+    padding-top: 5px;
+    align-items: flex-start;
+    overflow-x: hidden;
   }
   
   .hero-container {
     grid-template-columns: 1fr;
-    padding: 0 0.8rem;
-    gap: 1rem;
+    padding: 0 0.6rem;
+    padding-top: 0;
+    gap: 0.4rem;
     height: auto;
     text-align: center;
+    max-width: 100%;
+  }
+  
+  .hero-image {
+    padding-right: 0;
+    max-width: 100%;
+    margin-top: 8px;
   }
   
   .hero-content {
-    gap: 0.6rem;
+    gap: 0.3rem;
     padding-top: 0;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     order: 1;
+    transform: translateY(0);
   }
   
   .hero-image {
@@ -492,7 +594,7 @@
   
   .hero-headline {
     font-size: 1.3rem;
-    line-height: 1.3;
+    line-height: 1.2;
     margin-bottom: 0.2rem;
   }
   
@@ -504,22 +606,42 @@
   .hero-buttons {
     flex-direction: column;
     justify-content: center;
-    gap: 0.6rem;
+    align-items: center;
+    gap: 0.5rem;
     margin-top: 0.5rem;
     width: 100%;
   }
   
-  .btn-primary,
-  .btn-secondary {
-    padding: 0.6rem 1.2rem;
+  .btn-primary {
+    padding: 0.7rem 1.5rem;
     font-size: 0.8rem;
     width: 100%;
-    max-width: 240px;
-    border-radius: 20px;
+    max-width: 220px;
+    border-radius: 25px;
+  }
+  
+  .btn-secondary {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 220px;
+    border-radius: 25px;
   }
   
   .doctor-logo {
-    max-width: 160px;
+    max-width: 260px;
+    height: 55vh;
+  }
+  
+  .doctor-logo img {
+    width: 115%;
+    height: auto;
+    transform: translateY(85px) translateX(0);
+  }
+  
+  .hero-image {
+    justify-content: center;
+    padding-right: 0;
   }
 }
 
@@ -644,15 +766,15 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .hero {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: #F1F5F9 !important;
   }
   
   .hero-headline {
-    color: #ffffff;
+    color: #0F172A;
   }
   
   .hero-subheading {
-    color: #b0b0b0;
+    color: #64748B;
   }
 }
 
@@ -660,7 +782,7 @@
 @media print {
   .hero {
     height: auto;
-    background: white;
+    background: #F1F5F9 !important;
     color: black;
   }
   
