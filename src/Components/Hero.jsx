@@ -1,16 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import '../CSS/Hero.css';
 import logoImage from '../assets/Dr_Logo.png';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleStartChat = () => {
-    navigate('/chat');
+    if (isAuthenticated) {
+      navigate('/chat');
+    } else {
+      navigate('/auth', { 
+        state: { 
+          returnUrl: '/chat',
+          message: 'Please log in to start chatting with OrthoBot AI' 
+        } 
+      });
+    }
   };
-
 
   return (
     <section className="hero" id="home">

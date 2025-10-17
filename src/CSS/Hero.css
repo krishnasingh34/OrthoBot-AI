@@ -5,15 +5,28 @@
 .hero {
   width: 100%;
   max-width: 100vw;
-  height: 100vh;
+  min-height: 70vh;
+  height: auto;
   background: #F1F5F9 !important;
   background-color: #F1F5F9 !important;
   display: flex;
   align-items: center;
   padding: 0;
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: fit-content;
+    padding: 0;
+    margin-top: -35px;
+  }
+  
+  .hero-container {
+    padding: 0 1rem;
+    margin-top: 160px;
+  }
 }
 
 .hero-container {
@@ -146,7 +159,9 @@
 .doctor-logo {
   width: 100%;
   max-width: 550px;
-  height: 90vh;
+  height: auto;
+  min-height: 60vh;
+  max-height: 90vh;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -154,11 +169,11 @@
 }
 
 .doctor-logo img {
-  width: 150%;
+  width: 100%;
   height: auto;
-  max-width: 150%;
+  max-width: 100%;
   object-fit: contain;
-  transform: translateY(44px) translateX(0px);
+  transform: translateY(0);
 }
 
 /* Responsive Design */
@@ -400,6 +415,8 @@
     align-items: center;
     order: 1;
     transform: translateY(0);
+    margin-top: -8px;
+
   }
   
   .hero-image {
@@ -452,7 +469,7 @@
   .doctor-logo img {
     width: 130%;
     height: auto;
-    transform: translateY(56px) translateX(0);
+    transform: translateY(-4px) translateX(0);
   }
   
   .hero-image {
@@ -555,21 +572,21 @@
 /* Mobile Small (320px and below) */
 @media (max-width: 320px) {
   .hero {
-    height: 100vh;
-    padding: 0;
-    padding-top: 5px;
+    min-height: 100vh;
+    height: auto;
+    padding: 1rem 0;
     align-items: flex-start;
-    overflow-x: hidden;
+    overflow: hidden;
   }
   
   .hero-container {
     grid-template-columns: 1fr;
-    padding: 0 0.6rem;
-    padding-top: 0;
-    gap: 0.4rem;
+    padding: 0 1rem;
+    gap: 1rem;
     height: auto;
     text-align: center;
     max-width: 100%;
+    margin-top: 60px;
   }
   
   .hero-image {

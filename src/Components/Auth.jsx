@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "../CSS/Auth.css";
 import medAnimationVideo from "../assets/med_animation.mp4";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { login, signup, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [toast, setToast] = useState({ 
+    show: false, 
+    message: location.state?.message || '', 
+    type: 'info' 
+  });
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -113,8 +118,8 @@ const Auth = () => {
       const successMessage = isLogin ? 'Login successful!' : 'Account created successfully!';
       showToast(successMessage, 'success');
       
-      // Get redirect URL from query params, default to homepage
-      const redirectTo = searchParams.get('redirect') || '/';
+      // Get redirect URL from location state or query params
+      const redirectTo = location.state?.returnUrl || searchParams.get('redirect') || '/';
       
       // Redirect after showing toast
       setTimeout(() => {

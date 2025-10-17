@@ -1,12 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 .features-section {
-  padding: 60px 20px;
+  padding: 40px 20px;
   background: #F1F5F9 !important;
   background-color: #F1F5F9 !important;
-  min-height: 90vh;
+  min-height: fit-content;
   display: flex;
   align-items: center;
+}
+
+@media (max-width: 480px) {
+  .features-section {
+    padding: 0;
+    margin-top: -200px;
+  }
+  
+  .features-container {
+    padding: 0;
+    margin-top: 160px;
+  }
+  
+  .features-title {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+  }
+  
+  .features-grid {
+    gap: 12px;
+    padding: 0 10px;
+  }
+  
+  .feature-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-section {
+    padding: 30px 15px;
+  }
 }
 
 .features-container {
