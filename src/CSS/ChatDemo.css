@@ -357,6 +357,7 @@
   .chat-demo-container {
     padding: 0;
     width: 100%;
+    margin-top: -190px;
   }
   
   .chat-demo-title {
