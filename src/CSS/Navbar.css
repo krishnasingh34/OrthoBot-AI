@@ -39,7 +39,7 @@ a:active, button:active, [role="button"]:active, .nav-link:active {
 /* Navbar Container */
 .navbar {
   position: fixed;
-  top: 0;
+  top: -14px;
   left: 0;
   right: 0;
   background: #FFFFFF;
