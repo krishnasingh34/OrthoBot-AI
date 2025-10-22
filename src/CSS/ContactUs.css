@@ -64,7 +64,7 @@
 
 /* New simplified content structure */
 .contact-content { 
-  background: #fff; 
+  /* background: #fff;  */
   padding: 60px 0 100px;
   overflow-x: hidden; /* Prevent horizontal scroll */
 }
@@ -113,7 +113,7 @@
 
 /* Contact Form Section */
 .contact-form-section {
-  background: white;
+  /* background: white; */
   padding: 2.5rem;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -151,7 +151,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  /* background: white; */
 }
 
 .form-group input:focus,
@@ -191,7 +191,7 @@
 
 /* Contact Information */
 .contact-info {
-  background: white;
+  /* background: white; */
   padding: 2.5rem;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);

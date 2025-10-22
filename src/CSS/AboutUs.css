@@ -67,7 +67,7 @@
   
   /* About Section */
   .about-section {
-    background: white;
+    /* background: white; */
     padding: 80px 0;
   }
   
@@ -142,7 +142,7 @@
   
   /* Know More Section */
   .know-more-section {
-    background: #ffffff; /* match white background, remove card-like look */
+    /* background: #ffffff; */ /* match white background, remove card-like look */
     padding: 10px 0 60px; /* further reduce top gap above the heading */
   }
   
@@ -178,7 +178,7 @@
   }
   
   .legal-info {
-    background: white;
+    /* background: white; */
     padding: 20px;
     border-radius: 12px;
     border-left: 4px solid #f97316;
@@ -193,7 +193,7 @@
   
   /* Achievements Section */
   .achievements-section {
-    background: white;
+    /* background: white; */
     padding: 10px 0 100px; /* standardized footer gap */
   }
   
@@ -218,7 +218,7 @@
   }
   
   .achievement-card {
-    background: white;
+    /* background: white; */
     padding: 2rem;
     border-radius: 16px;
     text-align: center;

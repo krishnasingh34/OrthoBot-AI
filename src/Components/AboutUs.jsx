@@ -150,9 +150,9 @@ const AboutUs = () => {
         overflow: hidden;
       `;
 
-      // Create iframe
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://dr-rameshwar-appointment-gahmdwcjg2gjdwbh.centralindia-01.azurewebsites.net/webhook/8dfdf952-bc16-44c1-b436-709a0e94d524/chat';
+      // // Create iframe
+      // const iframe = document.createElement('iframe');
+      // iframe.src = 'https://dr-rameshwar-appointment-gahmdwcjg2gjdwbh.centralindia-01.azurewebsites.net/webhook/8dfdf952-bc16-44c1-b436-709a0e94d524/chat';
       iframe.style.cssText = `
         width: 100%;
         height: 100%;

@@ -179,105 +179,122 @@ const VoiceCallingInterface = ({ isOpen, onClose, selectedLanguage = 'en', onSav
 
   // Speak text using TTS
   const speakText = async (text, language) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-    const useAzure = Boolean(import.meta.env.VITE_USE_AZURE_TTS);
-    const azureVoice = import.meta.env.VITE_AZURE_VOICE || (language === 'hindi' || language === 'hinglish' ? 'hi-IN-SwaraNeural' : 'en-US-JennyNeural');
+    const useBrowserTTS = import.meta.env.VITE_USE_BROWSER_TTS === 'true';
+    setIsBotSpeaking(true);
 
-    // Try Azure TTS first if enabled
-    if (useAzure) {
-      try {
-        setIsBotSpeaking(true);
-        const tokenResp = await fetch(`${backendUrl}/api/azure/tts/token`);
-        if (!tokenResp.ok) {
-          let errDetail = '';
-          try {
-            const errJson = await tokenResp.json();
-            errDetail = JSON.stringify(errJson);
-          } catch {
-            try { errDetail = await tokenResp.text(); } catch {}
+    console.log('🎤 TTS Debug:', { 
+      useBrowserTTS, 
+      language, 
+      text: text.substring(0, 50) + '...' 
+    });
+
+    // Use enhanced browser TTS with better voices
+    if (useBrowserTTS && window.speechSynthesis) {
+      return new Promise((resolve) => {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Set language and voice based on detected language
+        if (language === 'hindi' || language === 'hinglish') {
+          utterance.lang = 'hi-IN';
+          utterance.rate = 0.9;
+          utterance.pitch = 1.1;
+        } else {
+          utterance.lang = 'en-IN';
+          utterance.rate = 0.9;
+          utterance.pitch = 1.1;
+          utterance.volume = 1.0;
+        }
+        
+        // Try to find a better voice
+        const voices = window.speechSynthesis.getVoices();
+        console.log('🎤 Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+        
+        if (voices.length > 0) {
+          let selectedVoice = null;
+          
+          if (language === 'hindi' || language === 'hinglish') {
+            // Look for Hindi voices - prioritize Kalpana
+            selectedVoice = voices.find(voice => 
+              voice.name.includes('Kalpana')
+            ) || voices.find(voice => 
+              voice.name.includes('Microsoft Kalpana') ||
+              voice.name.includes('Kalpana - Hindi (India)')
+            ) || voices.find(voice => 
+              voice.name.includes('Lekha') ||
+              voice.name.includes('Microsoft Lekha')
+            ) || voices.find(voice => 
+              voice.lang.includes('hi-IN') || 
+              voice.name.includes('Hindi') ||
+              voice.lang.includes('hi')
+            );
+          } else {
+            // Look for Indian English voices first, then other good English voices
+            selectedVoice = voices.find(voice => 
+              voice.name.includes('Google हिन्दी') ||
+              voice.name.includes('Google Indian English') ||
+              voice.name.includes('Microsoft Ravi') ||
+              voice.name.includes('Microsoft Heera') ||
+              voice.name.includes('en-IN') ||
+              voice.lang.includes('en-IN')
+            ) || voices.find(voice => 
+              voice.name.includes('Google UK English') ||
+              voice.name.includes('Microsoft Hazel') ||
+              voice.name.includes('Microsoft George') ||
+              voice.lang.includes('en-GB')
+            ) || voices.find(voice => 
+              voice.name.includes('Google US English') ||
+              voice.name.includes('Microsoft David') ||
+              voice.name.includes('Microsoft Zira') ||
+              voice.name.includes('Microsoft Mark')
+            ) || voices.find(voice => 
+              voice.name.includes('Google') ||
+              voice.name.includes('Microsoft') ||
+              (voice.lang.includes('en') && voice.localService === false)
+            );
           }
-          throw new Error(`Failed to get Azure token [${tokenResp.status}]: ${errDetail}`);
-        }
-        const { token, region } = await tokenResp.json();
-
-        const xmlLang = azureVoice.includes('-') ? azureVoice.split('-').slice(0, 2).join('-') : 'en-US';
-        const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const ssml = `<?xml version="1.0" encoding="UTF-8"?>
-<speak version="1.0" xml:lang="${xmlLang}" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts">
-  <voice name="${azureVoice}">
-    <mstts:express-as style="chat">${escaped}</mstts:express-as>
-  </voice>
-</speak>`;
-
-        const ttsResp = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3'
-          },
-          body: ssml
-        });
-
-        if (!ttsResp.ok) {
-          let errDetail = '';
-          try {
-            const errJson = await ttsResp.json();
-            errDetail = JSON.stringify(errJson);
-          } catch {
-            try { errDetail = await ttsResp.text(); } catch {}
+          
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            console.log('🎵 Using voice:', selectedVoice.name, selectedVoice.lang);
           }
-          throw new Error(`Azure TTS synthesis failed [${ttsResp.status}]: ${errDetail}`);
         }
-        const audioBlob = await ttsResp.blob();
-        const url = URL.createObjectURL(audioBlob);
-        // Stop any previous Azure audio immediately before starting new one
-        if (azureAudioRef.current) {
-          try { azureAudioRef.current.pause(); } catch {}
-        }
-        if (azureAudioUrlRef.current) {
-          try { URL.revokeObjectURL(azureAudioUrlRef.current); } catch {}
-        }
-        azureAudioUrlRef.current = url;
-        const audio = new Audio(url);
-        azureAudioRef.current = audio;
 
-        await new Promise((resolve) => {
-          audio.onended = () => {
-            setIsBotSpeaking(false);
-            try { URL.revokeObjectURL(url); } catch {}
-            if (azureAudioRef.current === audio) {
-              azureAudioRef.current = null;
-              azureAudioUrlRef.current = null;
-            }
-            resolve();
-          };
-          audio.onerror = () => {
-            setIsBotSpeaking(false);
-            try { URL.revokeObjectURL(url); } catch {}
-            if (azureAudioRef.current === audio) {
-              azureAudioRef.current = null;
-              azureAudioUrlRef.current = null;
-            }
-            resolve();
-          };
-          audio.play();
-        });
-        return;
-      } catch (e) {
-        console.warn('Azure TTS failed, falling back to browser TTS:', e);
-      }
+        utterance.onstart = () => {
+          setIsBotSpeaking(true);
+          console.log('🎵 TTS Started');
+        };
+        
+        utterance.onend = () => { 
+          setIsBotSpeaking(false); 
+          console.log('🎵 TTS Ended');
+          resolve(); 
+        };
+        
+        utterance.onerror = (error) => { 
+          setIsBotSpeaking(false); 
+          console.error('🚨 TTS Error:', error);
+          resolve(); 
+        };
+        
+        speechSynthesisRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      });
     }
 
     // Fallback to browser speechSynthesis
-    if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) {
+      setIsBotSpeaking(false);
+      return;
+    }
     return new Promise((resolve) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       if (language === 'hindi' || language === 'hinglish') {
         utterance.lang = 'hi-IN';
       } else {
-        utterance.lang = 'en-US';
+        utterance.lang = 'en-IN';
       }
       utterance.onstart = () => setIsBotSpeaking(true);
       utterance.onend = () => { setIsBotSpeaking(false); resolve(); };
