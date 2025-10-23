@@ -1697,7 +1697,12 @@ button, input, select, textarea {
   }
   
   .chat-input-area {
-    padding: 12px;
+    padding: 12px 12px 20px 12px; /* Added bottom padding to prevent cut-off */
+    /* Ensure input area is always visible */
+    position: relative;
+    z-index: 10;
+    background: #1a1a1a;
+    border-top: 1px solid #2d2d2d;
   }
   
   .input-container {
@@ -1705,6 +1710,8 @@ button, input, select, textarea {
     gap: 8px;
     min-height: 52px;
     border-radius: 16px;
+    /* Ensure container doesn't get cut off */
+    margin-bottom: 5px;
   }
   
   .chat-input {
@@ -1798,6 +1805,18 @@ button, input, select, textarea {
     z-index: 10;
     background: #171717;
     border-top: 1px solid #2d2d2d;
+  }
+  
+  /* Realme mobile specific fixes for chat input */
+  .chat-page {
+    /* Ensure page doesn't get cut off */
+    padding-bottom: 20px;
+    box-sizing: border-box;
+  }
+  
+  .chat-main {
+    /* Ensure main chat area has proper bottom spacing */
+    padding-bottom: 10px;
   }
   
   .section-title {
