@@ -465,14 +465,15 @@
 /* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .chat-demo-section {
-    padding: 40px 0.5rem;
+    padding: 20px 0.5rem; /* Reduced padding to minimize space */
     overflow-x: hidden;
+    min-height: auto; /* Remove fixed min-height */
   }
   
   .chat-demo-container {
     padding: 0;
     width: 100%;
-    margin-top: -190px;
+    margin-top: -50px; /* Reduced negative margin to minimize space */
   }
   
   .chat-demo-title {
@@ -533,14 +534,15 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .chat-demo-section {
-    padding: 30px 0.3rem;
+    padding: 15px 0.3rem; /* Further reduced padding for smaller screens */
     overflow-x: hidden;
+    min-height: auto; /* Remove fixed min-height */
   }
   
   .chat-demo-container {
     padding: 0;
     width: 100%;
-    margin-top: -180px;
+    margin-top: -30px; /* Significantly reduced negative margin */
   }
   
   .chat-demo-title {
@@ -595,6 +597,53 @@
     padding: 8px 12px;
     font-size: 0.75rem;
     border-radius: 16px;
+  }
+}
+
+/* Realme and very small mobile devices (≤360px) */
+@media (max-width: 360px) {
+  .chat-demo-section {
+    padding: 10px 0.2rem; /* Minimal padding for very small screens */
+    min-height: auto;
+  }
+  
+  .chat-demo-container {
+    margin-top: -20px; /* Minimal negative margin */
+  }
+  
+  .chat-demo-title {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    padding: 0 0.3rem;
+  }
+  
+  .chat-interface-container {
+    gap: 15px;
+    padding: 0 0.1rem;
+  }
+  
+  .main-chat-input {
+    padding: 5px 6px;
+    gap: 3px;
+    border-radius: 30px;
+    width: calc(100% - 0.4rem);
+    max-width: calc(100vw - 0.8rem);
+  }
+  
+  .popular-questions-section {
+    width: calc(100% - 0.4rem);
+    padding: 0;
+  }
+  
+  .popular-questions-title {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+  }
+  
+  .question-button {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    border-radius: 14px;
   }
 }
 
