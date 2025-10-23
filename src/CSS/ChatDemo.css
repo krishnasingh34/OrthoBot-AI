@@ -465,7 +465,7 @@
 /* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .chat-demo-section {
-    padding: 40px 0.5rem;
+    padding: 20px 0.5rem;
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
     padding-top: 20px;
@@ -535,7 +535,7 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .chat-demo-section {
-    padding: 30px 0.3rem;
+    padding: 10px 0.3rem;
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
     padding-top: 15px;
@@ -605,7 +605,7 @@
 /* Realme and very small mobile devices (≤360px) */
 @media (max-width: 360px) {
   .chat-demo-section {
-    padding: 20px 0.2rem;
+    padding: 10px 0.2rem;
     /* Only reduce top padding to minimize gap with doctor image */
     padding-top: 10px;
   }
