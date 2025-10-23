@@ -157,7 +157,7 @@
     font-weight: 700;
     color: #f97316;
     text-align: center;
-    margin: 0 0 40px 0;
+    margin: -85px 4px 0px;
   }
   
   .know-more-content {
@@ -242,7 +242,149 @@
     font-weight: 700;
   }
   
-  /* Responsive Design */
+  /* Large Desktop (1441px and above) */
+  @media (min-width: 1441px) {
+    .about-header {
+      padding: 140px 0 80px;
+      min-height: 55vh;
+    }
+    
+    .header-content h1 {
+      font-size: 3rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1.8rem;
+    }
+    
+    .about-container,
+    .know-more-container,
+    .achievements-container {
+      max-width: 1400px;
+      padding: 0 3rem;
+    }
+    
+    .about-content {
+      gap: 5rem;
+    }
+    
+    .about-text h4 {
+      font-size: 3rem;
+    }
+    
+    .about-text h3 {
+      font-size: 1.8rem;
+    }
+    
+    .description {
+      font-size: 1.25rem;
+      line-height: 1.8;
+    }
+    
+    .know-more-container h3,
+    .achievements-container h3 {
+      font-size: 3rem;
+    }
+    
+    .know-more-content p {
+      font-size: 1.25rem;
+      line-height: 1.9;
+    }
+    
+    .achievements-grid {
+      gap: 3rem;
+    }
+    
+    .achievement-card {
+      padding: 3rem;
+    }
+    
+    .achievement-number {
+      font-size: 3rem;
+    }
+  }
+
+  /* Desktop (1025px - 1440px) */
+  @media (min-width: 1025px) and (max-width: 1440px) {
+    .about-header {
+      padding: 120px 0 70px;
+      min-height: 50vh;
+    }
+    
+    .header-content h1 {
+      font-size: 2.8rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1.6rem;
+    }
+    
+    .about-container,
+    .know-more-container,
+    .achievements-container {
+      max-width: 1200px;
+      padding: 0 2.5rem;
+    }
+    
+    .about-content {
+      gap: 4rem;
+    }
+    
+    .about-text h4 {
+      font-size: 2.8rem;
+    }
+    
+    .know-more-container h3,
+    .achievements-container h3 {
+      font-size: 2.8rem;
+    }
+    
+    .achievements-grid {
+      gap: 2.5rem;
+    }
+  }
+
+  /* Tablet (769px - 1024px) */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .about-header {
+      padding: 100px 0 60px;
+      min-height: 45vh;
+    }
+    
+    .header-content h1 {
+      font-size: 2.5rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1.4rem;
+    }
+    
+    .about-container,
+    .know-more-container,
+    .achievements-container {
+      padding: 0 2rem;
+    }
+    
+    .about-content {
+      gap: 3rem;
+    }
+    
+    .about-text h4 {
+      font-size: 2.5rem;
+    }
+    
+    .know-more-container h3,
+    .achievements-container h3 {
+      font-size: 2.5rem;
+    }
+    
+    .achievements-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  /* Mobile (≤768px) */
   @media (max-width: 768px) {
     .about-content {
       grid-template-columns: 1fr;
@@ -290,6 +432,7 @@
     }
   }
   
+  /* Small Mobile (≤480px) */
   @media (max-width: 480px) {
     .about-container,
     .know-more-container,
@@ -337,6 +480,72 @@
     
     .achievements-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* Extra Small Mobile (≤320px) */
+  @media (max-width: 320px) {
+    .about-container,
+    .know-more-container,
+    .achievements-container {
+      padding: 0 0.8rem;
+    }
+    
+    .about-section {
+      padding: 50px 0;
+    }
+    
+    .achievements-section {
+      padding: 5px 0 50px;
+    }
+    
+    .know-more-section {
+      padding: 10px 0 50px;
+    }
+    
+    .header-content h1 {
+      font-size: 1.5rem;
+    }
+    
+    .header-content h2 {
+      font-size: 1rem;
+    }
+    
+    .about-text h4 {
+      font-size: 1.5rem;
+    }
+    
+    .about-text h3 {
+      font-size: 1.2rem;
+    }
+    
+    .description {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    
+    .know-more-container h3,
+    .achievements-container h3 {
+      font-size: 1.8rem;
+    }
+    
+    .know-more-content p {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    
+    .about-image img {
+      width: 280px;
+      height: 400px;
+      transform: translate(-4px, -28px);
+    }
+    
+    .achievement-card {
+      padding: 1.5rem;
+    }
+    
+    .achievement-number {
+      font-size: 1.8rem;
     }
   }
 

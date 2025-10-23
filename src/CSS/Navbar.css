@@ -645,7 +645,7 @@ a:active, button:active, [role="button"]:active, .nav-link:active {
   
   .mobile-menu {
     width: 90vw;
-    max-width: 280px;
+    max-width: 215px;
   }
   
   .mobile-menu-content {

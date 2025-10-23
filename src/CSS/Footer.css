@@ -269,3 +269,45 @@ body.dark-mode .footer-bottom::before {
   }
 }
 
+/* Extra Small Mobile (≤320px) */
+@media (max-width: 320px) {
+  .footer-container {
+    padding: 1rem 0.8rem 0.8rem;
+  }
+  
+  .footer-main {
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-logo {
+    font-size: 1.4rem;
+  }
+  
+  .footer-tagline {
+    font-size: 0.95rem;
+  }
+  
+  .footer-description {
+    font-size: 0.85rem;
+  }
+  
+  .social-icons {
+    gap: 0.6rem;
+  }
+  
+  .social-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .footer-bottom {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .footer-copyright {
+    font-size: 0.9rem;
+  }
+}
+

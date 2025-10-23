@@ -288,7 +288,185 @@
   font-weight: 600;
 }
 
-/* Responsive Design */
+/* Large Desktop (1441px and above) */
+@media (min-width: 1441px) {
+  .contact-header {
+    min-height: 60vh;
+    padding: 140px 0 80px;
+  }
+  
+  .header-content h1 {
+    font-size: 3.5rem;
+  }
+  
+  .header-content h2 {
+    font-size: 1.8rem;
+  }
+  
+  .contact-container {
+    max-width: 1400px;
+    padding: 0 3rem;
+  }
+  
+  .contact-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+  
+  .action-card {
+    padding: 2rem;
+  }
+  
+  .action-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .action-content h3 {
+    font-size: 1.4rem;
+  }
+  
+  .action-content a {
+    font-size: 1.1rem;
+  }
+  
+  .locations-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+  
+  .location-card {
+    padding: 2.5rem;
+  }
+  
+  .location-icon {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .location-title {
+    font-size: 1.4rem;
+  }
+  
+  .location-address {
+    font-size: 1rem;
+  }
+}
+
+/* Desktop (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .contact-header {
+    min-height: 55vh;
+    padding: 120px 0 70px;
+  }
+  
+  .header-content h1 {
+    font-size: 3rem;
+  }
+  
+  .header-content h2 {
+    font-size: 1.6rem;
+  }
+  
+  .contact-container {
+    max-width: 1200px;
+    padding: 0 2.5rem;
+  }
+  
+  .contact-actions {
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .action-card {
+    padding: 1.75rem;
+  }
+  
+  .action-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .action-content h3 {
+    font-size: 1.3rem;
+  }
+  
+  .action-content a {
+    font-size: 1.05rem;
+  }
+  
+  .locations-grid {
+    gap: 2.5rem;
+  }
+  
+  .location-card {
+    padding: 2.25rem;
+  }
+  
+  .location-icon {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* Tablet (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .contact-header {
+    min-height: 50vh;
+    padding: 100px 0 60px;
+  }
+  
+  .header-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .header-content h2 {
+    font-size: 1.4rem;
+  }
+  
+  .contact-container {
+    padding: 0 2rem;
+  }
+  
+  .contact-actions {
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .action-card {
+    padding: 1.5rem;
+  }
+  
+  .action-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .action-content h3 {
+    font-size: 1.2rem;
+  }
+  
+  .action-content a {
+    font-size: 1rem;
+  }
+  
+  .locations-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  
+  .location-card {
+    padding: 2rem;
+  }
+  
+  .location-icon {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Mobile (≤768px) */
 @media (max-width: 768px) {
   .contact-actions { 
     grid-template-columns: 1fr; 
@@ -326,6 +504,7 @@
   }
 }
 
+/* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .contact-container {
     padding: 0 0.75rem;
@@ -379,6 +558,76 @@
   .submit-btn {
     padding: 0.875rem 1.5rem;
     font-size: 0.875rem;
+  }
+}
+
+/* Extra Small Mobile (≤320px) */
+@media (max-width: 320px) {
+  .contact-container {
+    padding: 0 0.5rem;
+  }
+  
+  .contact-content { 
+    padding: 30px 0 50px;
+  }
+  
+  .contact-header { 
+    min-height: 35vh; 
+    padding: 70px 0 35px;
+  }
+  
+  .contact-actions {
+    margin: 0 0.3rem 1rem 0.3rem;
+  }
+
+  .action-card {
+    padding: 0.8rem;
+    margin-bottom: 0.3rem;
+    width: calc(100% - 0.6rem);
+  }
+
+  .action-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .action-content h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .action-content a {
+    font-size: 0.8rem;
+  }
+  
+  .header-content h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-content h2 {
+    font-size: 1rem;
+  }
+  
+  .submit-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .location-card {
+    padding: 1.5rem;
+  }
+  
+  .location-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .location-title {
+    font-size: 1.1rem;
+  }
+  
+  .location-address {
+    font-size: 0.9rem;
   }
 }
 

@@ -243,10 +243,125 @@
   box-shadow: 0 6px 25px rgba(14, 165, 164, 0.4);
 }
 
-/* Tablet Styles */
-@media (max-width: 1024px) {
+/* Large Desktop (1441px and above) */
+@media (min-width: 1441px) {
   .chat-demo-section {
-    padding: 60px 15px;
+    padding: 120px 50px;
+  }
+  
+  .chat-demo-container {
+    max-width: 1200px;
+  }
+  
+  .chat-demo-title {
+    font-size: 3.5rem;
+    margin-bottom: 80px;
+  }
+  
+  .chat-interface-container {
+    max-width: 900px;
+    gap: 50px;
+  }
+  
+  .main-chat-input {
+    padding: 15px 25px;
+    gap: 20px;
+  }
+  
+  .main-input {
+    font-size: 1.2rem;
+  }
+  
+  .mic-button,
+  .send-button {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mic-button svg,
+  .send-button svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .popular-questions-title {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+  }
+  
+  .popular-questions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  
+  .question-button {
+    padding: 18px 25px;
+    font-size: 1rem;
+    border-radius: 30px;
+  }
+}
+
+/* Desktop (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .chat-demo-section {
+    padding: 100px 40px;
+  }
+  
+  .chat-demo-container {
+    max-width: 1000px;
+  }
+  
+  .chat-demo-title {
+    font-size: 3rem;
+    margin-bottom: 60px;
+  }
+  
+  .chat-interface-container {
+    max-width: 700px;
+    gap: 40px;
+  }
+  
+  .main-chat-input {
+    padding: 12px 20px;
+    gap: 18px;
+  }
+  
+  .main-input {
+    font-size: 1.1rem;
+  }
+  
+  .mic-button,
+  .send-button {
+    width: 46px;
+    height: 46px;
+  }
+  
+  .mic-button svg,
+  .send-button svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .popular-questions-title {
+    font-size: 1.4rem;
+    margin-bottom: 25px;
+  }
+  
+  .popular-questions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+  }
+  
+  .question-button {
+    padding: 15px 20px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablet (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chat-demo-section {
+    padding: 80px 30px;
   }
   
   .chat-demo-title {
@@ -278,7 +393,7 @@
   }
 }
 
-/* Mobile Styles */
+/* Mobile (≤768px) */
 @media (max-width: 768px) {
   .chat-demo-section {
     padding: 50px 0.5rem;
@@ -347,7 +462,7 @@
   }
 }
 
-/* Small Mobile Styles */
+/* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .chat-demo-section {
     padding: 40px 0.5rem;
@@ -412,6 +527,74 @@
     padding: 10px 14px;
     font-size: 0.8rem;
     border-radius: 18px;
+  }
+}
+
+/* Extra Small Mobile (≤320px) */
+@media (max-width: 320px) {
+  .chat-demo-section {
+    padding: 30px 0.3rem;
+    overflow-x: hidden;
+  }
+  
+  .chat-demo-container {
+    padding: 0;
+    width: 100%;
+    margin-top: -180px;
+  }
+  
+  .chat-demo-title {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+    padding: 0 0.5rem;
+  }
+  
+  .chat-interface-container {
+    gap: 20px;
+    padding: 0 0.2rem;
+  }
+  
+  .main-chat-input {
+    padding: 6px 8px;
+    gap: 4px;
+    border-radius: 35px;
+    width: calc(100% - 0.6rem);
+    max-width: calc(100vw - 1rem);
+  }
+  
+  .popular-questions-section {
+    width: calc(100% - 0.6rem);
+    padding: 0;
+  }
+  
+  .main-input {
+    font-size: 0.8rem;
+    min-width: 0;
+    flex: 1;
+  }
+  
+  .mic-button,
+  .send-button {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  
+  .mic-button svg,
+  .send-button svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .popular-questions-title {
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+  
+  .question-button {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    border-radius: 16px;
   }
 }
 
