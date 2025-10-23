@@ -912,7 +912,7 @@
 @media (max-width: 400px) {
   .hero {
     /* Reduce bottom padding to minimize gap with ChatDemo */
-    padding-bottom: 20px;
+    padding-bottom: 10px;
   }
   
   .doctor-logo {
