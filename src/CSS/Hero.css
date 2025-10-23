@@ -30,6 +30,13 @@
   overflow: hidden;
 }
 
+/* Tighten hero bottom spacing in desktop-site-on-mobile scenarios */
+@media (min-width: 900px) and (max-height: 900px) {
+  .hero {
+    padding-bottom: 8px;     /* much tighter bottom spacing */
+  }
+}
+
 .hero-container {
   max-width: var(--container-max-width);
   width: 100%;

@@ -384,7 +384,7 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .faq-section {
-    padding: 60px 3px 30px 3px; /* top, right, bottom, left - reduced bottom padding */
+    padding: 0px 3px 30px 3px; /* top, right, bottom, left - reduced bottom padding */
   }
   
   .faq-title {
