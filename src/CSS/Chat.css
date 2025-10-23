@@ -536,6 +536,9 @@
   border-top: 1px solid #2d2d2d;
   flex-shrink: 0;
   margin-bottom: 5px;
+  /* Ensure footer is always visible on mobile */
+  position: relative;
+  z-index: 10;
 }
 
 .user-profile {
@@ -549,6 +552,9 @@
   transition: all 0.2s ease;
   font-size: 13px;
   color: #ffffff;
+  /* Ensure user profile is fully visible */
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 .user-profile:hover {
@@ -1618,7 +1624,12 @@ button, input, select, textarea {
     transition: transform 0.3s ease;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     background: #171717;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
+    /* Ensure sidebar content is properly contained */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    box-sizing: border-box;
   }
   
   .chat-sidebar.open {
@@ -1774,11 +1785,19 @@ button, input, select, textarea {
     padding: 16px;
     font-size: 14px;
     border-radius: 12px;
+    /* Ensure user profile is fully visible on mobile */
+    margin-bottom: 10px;
+    box-sizing: border-box;
   }
   
   .sidebar-footer {
-    padding: 8px 12px;
-    margin-bottom: 5px;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    /* Ensure footer is always visible */
+    position: relative;
+    z-index: 10;
+    background: #171717;
+    border-top: 1px solid #2d2d2d;
   }
   
   .section-title {
@@ -1898,6 +1917,22 @@ button, input, select, textarea {
   .user-profile {
     padding: 14px;
     font-size: 13px;
+    min-height: 50px;
+    /* Ensure user profile is fully visible on small screens */
+    margin-bottom: 10px;
+  }
+  
+  .sidebar-footer {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    /* Add extra bottom margin for Realme devices */
+    margin-bottom: 15px;
+  }
+  
+  .chat-sidebar {
+    /* Ensure sidebar content doesn't get cut off */
+    padding-bottom: 20px;
+    box-sizing: border-box;
   }
 }
 
