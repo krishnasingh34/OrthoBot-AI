@@ -14,6 +14,32 @@
   overflow-x: hidden;
 }
 
+/* Reduce excessive gap when browsers render "Desktop site" on phones
+   (viewport width high but physical height limited) */
+@media (min-width: 900px) and (max-height: 900px) {
+  .chat-demo-section {
+    min-height: auto;         /* avoid large vertical stretch */
+    padding-top: 8px;         /* much tighter top spacing */
+    padding-bottom: 20px;     /* reduced bottom spacing */
+  }
+  .chat-demo-container {
+    margin-top: -80px;        /* pull section up significantly under hero */
+  }
+  .chat-demo-title {
+    margin-bottom: 28px;      /* keep title visible; still tight */
+  }
+}
+
+/* Also tighten spacing a bit for narrow-desktop widths (common in mobile desktop mode) */
+@media (min-width: 900px) and (max-width: 1200px) {
+  .chat-demo-section {
+    padding-top: 16px;        /* keep heading visible */
+  }
+  .chat-demo-title {
+    margin-bottom: 30px;      /* ensure heading shows clearly */
+  }
+}
+
 .chat-demo-container {
   max-width: 1000px;
   margin: 0 auto;
@@ -35,6 +61,7 @@
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   word-wrap: break-word;
   max-width: 100%;
+  z-index: 2; /* keep title above any overlapping elements */
 }
 
 .chat-demo-title::after {
@@ -465,22 +492,24 @@
 /* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .chat-demo-section {
-    padding: 18px 0.5rem;
+    padding: 30px 0.5rem; /* Increased padding to prevent title cut-off */
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
-    padding-top: 14px; /* tighter top spacing to shrink gap slightly */
+    padding-top: 25px; /* More space for title visibility */
   }
   
   .chat-demo-container {
     padding: 0;
     width: 100%;
-    margin-top: -190px;
+    margin-top: -120px; /* Less aggressive pull to keep title visible */
   }
   
   .chat-demo-title {
     font-size: 1.6rem;
     margin-bottom: 28px; /* slightly tighter to reduce perceived gap */
     padding: 0 0.8rem;
+    /* Ensure title is fully visible */
+    margin-top: 10px;
   }
   
   .chat-interface-container {
@@ -535,22 +564,24 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .chat-demo-section {
-    padding: 8px 0.3rem;
+    padding: 20px 0.3rem; /* Increased padding for title visibility */
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
-    padding-top: 10px; /* slightly tighter */
+    padding-top: 18px; /* More space for title */
   }
   
   .chat-demo-container {
     padding: 0;
     width: 100%;
-    margin-top: -180px;
+    margin-top: -120px; /* Less aggressive pull to prevent title cut */
   }
   
   .chat-demo-title {
     font-size: 1.4rem;
     margin-bottom: 24px; /* reduce space under heading */
     padding: 0 0.5rem;
+    /* Ensure title is fully visible */
+    margin-top: 8px;
   }
   
   .chat-interface-container {
@@ -605,19 +636,21 @@
 /* Realme and very small mobile devices (≤360px) */
 @media (max-width: 360px) {
   .chat-demo-section {
-    padding: 10px 0.2rem;
+    padding: 18px 0.2rem; /* Increased padding for title visibility */
     /* Only reduce top padding to minimize gap with doctor image */
-    padding-top: 10px;
+    padding-top: 15px; /* More space for title */
   }
   
   .chat-demo-container {
-    margin-top: -150px;
+    margin-top: -120px; /* Less aggressive pull to keep title visible */
   }
   
   .chat-demo-title {
     font-size: 1.3rem;
     margin-bottom: 25px;
     padding: 0 0.3rem;
+    /* Ensure title is fully visible */
+    margin-top: 8px;
   }
   
   .chat-interface-container {

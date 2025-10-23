@@ -372,7 +372,7 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .features-section {
-    padding: 30px 5px;
+    padding: 78px 5px;
   }
   
   .features-title {
