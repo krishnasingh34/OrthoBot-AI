@@ -151,10 +151,98 @@
   margin: 0;
 }
 
-/* Tablet Styles */
-@media (max-width: 1024px) {
+/* Large Desktop (1441px and above) */
+@media (min-width: 1441px) {
   .features-section {
-    padding: 60px 15px;
+    padding: 100px 40px;
+  }
+  
+  .features-container {
+    max-width: 1400px;
+  }
+  
+  .features-title {
+    font-size: 3.2rem;
+    margin-bottom: 70px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    padding: 0 20px;
+  }
+  
+  .feature-card {
+    padding: 30px 25px;
+  }
+  
+  .feature-icon {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
+  }
+  
+  .feature-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .feature-title {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+  
+  .feature-description {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
+/* Desktop (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .features-section {
+    padding: 80px 30px;
+  }
+  
+  .features-title {
+    font-size: 2.8rem;
+    margin-bottom: 60px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    padding: 0 15px;
+  }
+  
+  .feature-card {
+    padding: 25px 20px;
+  }
+  
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 18px;
+  }
+  
+  .feature-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .feature-title {
+    font-size: 1.2rem;
+  }
+  
+  .feature-description {
+    font-size: 0.9rem;
+  }
+}
+
+/* Tablet (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .features-section {
+    padding: 60px 20px;
   }
   
   .features-title {
@@ -192,7 +280,7 @@
   }
 }
 
-/* Mobile Styles */
+/* Mobile (≤768px) */
 @media (max-width: 768px) {
   .features-section {
     padding: 50px 15px;
@@ -236,7 +324,7 @@
   }
 }
 
-/* Small Mobile Styles */
+/* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .features-section {
     padding: 40px 10px;
@@ -278,5 +366,48 @@
   .feature-description {
     font-size: 0.8rem;
     line-height: 1.4;
+  }
+}
+
+/* Extra Small Mobile (≤320px) */
+@media (max-width: 320px) {
+  .features-section {
+    padding: 30px 5px;
+  }
+  
+  .features-title {
+    font-size: 1.6rem;
+    margin-bottom: 30px;
+  }
+  
+  .features-grid {
+    gap: 12px;
+  }
+  
+  .feature-card {
+    padding: 18px 12px;
+    border-radius: 10px;
+    max-width: 280px;
+  }
+  
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .feature-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .feature-title {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  
+  .feature-description {
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
 }

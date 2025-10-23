@@ -1216,7 +1216,6 @@ const Chat = () => {
         onSaveVoiceHistory={handleSaveVoiceHistory}
       />
       
-      {/* Navbar */}
       <Navbar />
       
       {/* Sidebar Overlay for Mobile */}

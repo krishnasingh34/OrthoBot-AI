@@ -755,6 +755,7 @@
     padding: 1rem 0;
     align-items: flex-start;
     overflow: hidden;
+    margin-top: -113px
   }
   
   .hero-container {
@@ -831,7 +832,7 @@
   .doctor-logo img {
     width: 115%;
     height: auto;
-    transform: translateY(85px) translateX(0);
+    transform: translateY(19px) translateX(0);
   }
   
   .hero-image {
