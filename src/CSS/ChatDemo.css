@@ -465,10 +465,10 @@
 /* Small Mobile (≤480px) */
 @media (max-width: 480px) {
   .chat-demo-section {
-    padding: 20px 0.5rem;
+    padding: 18px 0.5rem;
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
-    padding-top: 20px;
+    padding-top: 14px; /* tighter top spacing to shrink gap slightly */
   }
   
   .chat-demo-container {
@@ -479,7 +479,7 @@
   
   .chat-demo-title {
     font-size: 1.6rem;
-    margin-bottom: 35px;
+    margin-bottom: 28px; /* slightly tighter to reduce perceived gap */
     padding: 0 0.8rem;
   }
   
@@ -535,10 +535,10 @@
 /* Extra Small Mobile (≤320px) */
 @media (max-width: 320px) {
   .chat-demo-section {
-    padding: 10px 0.3rem;
+    padding: 8px 0.3rem;
     overflow-x: hidden;
     /* Only reduce top padding to minimize gap with doctor image */
-    padding-top: 15px;
+    padding-top: 10px; /* slightly tighter */
   }
   
   .chat-demo-container {
@@ -549,7 +549,7 @@
   
   .chat-demo-title {
     font-size: 1.4rem;
-    margin-bottom: 30px;
+    margin-bottom: 24px; /* reduce space under heading */
     padding: 0 0.5rem;
   }
   
