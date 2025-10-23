@@ -755,7 +755,9 @@
     padding: 1rem 0;
     align-items: flex-start;
     overflow: hidden;
-    margin-top: -113px
+    margin-top: -113px;
+    /* Reduce bottom padding to minimize gap with ChatDemo */
+    padding-bottom: 10px;
   }
   
   .hero-container {
@@ -908,6 +910,11 @@
 
 /* Realme and small mobile devices specific fixes */
 @media (max-width: 400px) {
+  .hero {
+    /* Reduce bottom padding to minimize gap with ChatDemo */
+    padding-bottom: 20px;
+  }
+  
   .doctor-logo {
     max-width: 100%;
     width: 100%;
